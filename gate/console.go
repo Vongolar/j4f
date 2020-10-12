@@ -3,8 +3,9 @@ package gate
 import (
 	Jerror "JFFun/data/error"
 	"bufio"
+	"fmt"
 	"os"
-	"unsafe"
+	"strconv"
 )
 
 var consoleOut *bufio.Writer
@@ -19,15 +20,20 @@ func listenConsole(on func(string)) {
 	}
 }
 
-type consoleReq struct {
+type consoleResp struct {
 }
 
-func (req *consoleReq) Reply(errCode Jerror.Error, msg []byte) error {
+func (req *consoleResp) Reply(id int64, errCode Jerror.Error, data []byte) error {
 	out := consoleOut
 	if errCode != Jerror.Error_ok {
 		out = consoleErr
 	}
-	_, err := out.WriteString(*(*string)(unsafe.Pointer(&msg)))
+	resp := "error : " + strconv.Itoa(int(errCode)) + "\n"
+	if data != nil && len(data) > 0 {
+		resp += fmt.Sprintf("%s\n\n", data)
+	}
+
+	_, err := out.WriteString(resp)
 	if err != nil {
 		return err
 	}
