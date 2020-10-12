@@ -1,0 +1,2 @@
+console = true
+http = "localhost:10000"
