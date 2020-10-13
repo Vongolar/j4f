@@ -7,6 +7,8 @@ import (
 	"JFFun/task"
 	"context"
 	"flag"
+	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"unsafe"
@@ -39,15 +41,13 @@ func (m *M_Gate) Init() error {
 	return nil
 }
 
-func (m *M_Gate) GetHandlers() map[Jcommand.Command]func(task *task.Task) {
-	return map[Jcommand.Command]func(task *task.Task){
-		Jcommand.Command_getOnlinePlayerCount: m.getOnlinePlayerCount,
-	}
-}
-
 func (m *M_Gate) Run(ctx context.Context) {
 	if m.cfg.Console {
 		go m.listenConsole()
+	}
+
+	if len(m.cfg.HTTP) > 0 {
+		go m.listenHTTP()
 	}
 
 Listen:
@@ -108,6 +108,16 @@ func (m *M_Gate) listenConsole() {
 			id:      id,
 			data:    *(*[]byte)(unsafe.Pointer(&data)),
 			respone: new(consoleResp),
+		}
+	})
+}
+
+func (m *M_Gate) listenHTTP() {
+	listenHTTP(m.cfg.HTTP, func(w http.ResponseWriter, r *http.Request) {
+		cmdStr := r.Header.Get("Command")
+		cmd, err := strconv.Atoi(cmdStr)
+		if err != nil {
+
 		}
 	})
 }

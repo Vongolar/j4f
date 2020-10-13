@@ -39,3 +39,7 @@ func (acc *account) onCommand(request *command) {
 	Jlog.Info(Jlog.TAG_CommandReq, fmt.Sprintf("\nReq from %s\ncmd : %d\nid : %d\n", request.acc.id, request.cmd, request.id))
 	server.HandleTask(task.CMD, task)
 }
+
+func (acc *account) sync(command Jcommand.Command, data interface{}) {
+
+}
