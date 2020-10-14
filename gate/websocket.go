@@ -1,6 +1,7 @@
 package gate
 
 import (
+	Jerror "JFFun/data/error"
 	"JFFun/log"
 	"net/http"
 
@@ -34,4 +35,34 @@ func onWebsocketAccept(w http.ResponseWriter, r *http.Request, onAccept func(con
 
 func checkOrigin(r *http.Request) bool {
 	return true
+}
+
+func (acc *account) listenWebsocket(conn *websocket.Conn) {
+	if conn == nil {
+		return
+	}
+	if acc.websocketConn != nil {
+		acc.websocketConn.Close()
+	}
+	acc.websocketConn = conn
+	acc.websocketConn.SetCloseHandler(func(code int, txt string) error {
+		return nil
+	})
+	for {
+		_, data, err := acc.websocketConn.ReadMessage()
+		if err != nil {
+			acc.websocketConn = nil
+			return
+		}
+		cmd := bytesToInt(data[:4])
+	}
+}
+
+type websocketResp struct {
+}
+
+func (r *websocketResp) Reply(id int64, errCode Jerror.Error, data []byte) error {
+	// r.writer.Header().Add("Error", strconv.Itoa(int(errCode)))
+	// _, err := r.writer.Write(data)
+	// return err
 }

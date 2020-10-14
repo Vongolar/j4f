@@ -8,13 +8,16 @@ import (
 	"JFFun/server"
 	"JFFun/task"
 	"fmt"
+
+	"github.com/gorilla/websocket"
 )
 
 const rootID = "root"
 
 type account struct {
-	id   string
-	auth authority
+	id            string
+	auth          authority
+	websocketConn *websocket.Conn
 }
 
 //消息到达时

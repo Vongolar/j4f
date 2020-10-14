@@ -1,6 +1,7 @@
 package gate
 
 import (
+	Jcommand "JFFun/data/command"
 	Jerror "JFFun/data/error"
 	"bufio"
 	"fmt"
@@ -8,16 +9,41 @@ import (
 	"strconv"
 )
 
-var consoleOut *bufio.Writer
-var consoleErr *bufio.Writer
+/*
+控制台
+长连接
+*/
 
-func listenConsole(on func(string)) {
+var consoleOut *bufio.Writer
+var consoleIn *bufio.Scanner
+
+func listenConsole(onAccept func(authorization string, conn connect) bool) {
 	consoleOut = bufio.NewWriter(os.Stdout)
-	consoleErr = bufio.NewWriter(os.Stderr)
-	input := bufio.NewScanner(os.Stdin)
+	consoleIn = bufio.NewScanner(os.Stdin)
+
+Listen:
 	for input.Scan() {
-		on(input.Text())
+		if onAccept(input.Text()) {
+			//鉴权成功
+			break Listen
+		}
 	}
+
+	//监听指令
+	for input.Scan() {
+
+	}
+}
+
+func waitConsole(onAccept func(authorization string, conn connect) bool) {
+
+}
+
+type consoleConn struct {
+}
+
+func (conn *consoleConn) sync(cmd Jcommand.Command, data []byte) error {
+
 }
 
 type consoleResp struct {
@@ -25,9 +51,6 @@ type consoleResp struct {
 
 func (r *consoleResp) Reply(id int64, errCode Jerror.Error, data []byte) error {
 	out := consoleOut
-	if errCode != Jerror.Error_ok {
-		out = consoleErr
-	}
 	resp := "error : " + strconv.Itoa(int(errCode)) + "\n"
 	if data != nil && len(data) > 0 {
 		resp += fmt.Sprintf("%s\n\n", data)

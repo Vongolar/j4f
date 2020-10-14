@@ -19,5 +19,8 @@ func (mgr *accountMgr) getTempAccount() *account {
 }
 
 func (mgr *accountMgr) addAccount(acc *account) {
+	if mgr.pool == nil {
+		mgr.pool = make(map[string]*account)
+	}
 	mgr.pool[acc.id] = acc
 }
