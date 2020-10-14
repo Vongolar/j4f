@@ -5,8 +5,17 @@ type accountMgr struct {
 }
 
 func (mgr *accountMgr) getAccount(playerID string) *account {
+	if mgr.pool == nil {
+		return nil
+	}
 	acc, _ := mgr.pool[playerID]
 	return acc
+}
+
+func (mgr *accountMgr) getTempAccount() *account {
+	return &account{
+		auth: authTemp,
+	}
 }
 
 func (mgr *accountMgr) addAccount(acc *account) {

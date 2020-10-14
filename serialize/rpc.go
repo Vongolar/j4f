@@ -1,8 +1,7 @@
-package rpc
+package serialize
 
 import (
 	"JFFun/data/command"
-	"JFFun/serialize"
 	"encoding/json"
 	"errors"
 
@@ -13,7 +12,7 @@ var ErrNoCommandDecoder = errors.New("No Command Decoder")
 var ErrNoCommandEncoder = errors.New("No Command Encoder")
 var ErrEncode = errors.New("Encode Error")
 
-func DecodeReq(cmd command.Command, mode serialize.SerializeMode, data []byte) (interface{}, error) {
+func DecodeReq(cmd command.Command, mode SerializeMode, data []byte) (interface{}, error) {
 	switch cmd {
 	case command.Command_ping:
 		fallthrough
@@ -25,7 +24,7 @@ func DecodeReq(cmd command.Command, mode serialize.SerializeMode, data []byte) (
 
 var emptyBytes []byte = []byte{}
 
-func EncodeResp(cmd command.Command, mode serialize.SerializeMode, data interface{}) ([]byte, error) {
+func EncodeResp(cmd command.Command, mode SerializeMode, data interface{}) ([]byte, error) {
 	switch cmd {
 	case command.Command_ping:
 		return emptyBytes, nil
@@ -35,11 +34,11 @@ func EncodeResp(cmd command.Command, mode serialize.SerializeMode, data interfac
 	return nil, ErrNoCommandEncoder
 }
 
-func encode(mode serialize.SerializeMode, data interface{}) ([]byte, error) {
+func encode(mode SerializeMode, data interface{}) ([]byte, error) {
 	switch mode {
-	case serialize.JSON:
+	case JSON:
 		return json.Marshal(data)
-	case serialize.Protobuf:
+	case Protobuf:
 		if pd, ok := data.(proto.Message); ok {
 			return proto.Marshal(pd)
 		}

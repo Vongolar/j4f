@@ -3,15 +3,19 @@ package gate
 import (
 	Jconfig "JFFun/config"
 	Jcommand "JFFun/data/command"
+	Jerror "JFFun/data/error"
 	"JFFun/serialize"
 	"JFFun/task"
 	"context"
 	"flag"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 	"unsafe"
+
+	"github.com/gorilla/websocket"
 )
 
 type M_Gate struct {
@@ -50,6 +54,10 @@ func (m *M_Gate) Run(ctx context.Context) {
 		go m.listenHTTP()
 	}
 
+	if len(m.cfg.Websocket) > 0 {
+		go m.listenWebsocket()
+	}
+
 Listen:
 	for {
 		select {
@@ -62,12 +70,12 @@ Listen:
 }
 
 type command struct {
-	id      int64
-	cmd     Jcommand.Command
-	smode   serialize.SerializeMode
-	acc     *account
-	respone task.Response
-	data    []byte
+	id       int64
+	cmd      Jcommand.Command
+	smode    serialize.SerializeMode
+	acc      *account
+	response task.Response
+	data     []byte
 }
 
 func (m *M_Gate) listenConsole() {
@@ -87,7 +95,7 @@ func (m *M_Gate) listenConsole() {
 			return
 		}
 
-		if !serialize.Invaild(mode) {
+		if !serialize.VaildMode(mode) {
 			return
 		}
 
@@ -102,22 +110,81 @@ func (m *M_Gate) listenConsole() {
 		m.accMgr.pool[a.id] = a
 		m.accMgrLocker.Unlock()
 		m.commandChan <- &command{
-			acc:     a,
-			cmd:     Jcommand.Command(cmd),
-			smode:   serialize.SerializeMode(mode),
-			id:      id,
-			data:    *(*[]byte)(unsafe.Pointer(&data)),
-			respone: new(consoleResp),
+			acc:      a,
+			cmd:      Jcommand.Command(cmd),
+			smode:    serialize.SerializeMode(mode),
+			id:       id,
+			data:     *(*[]byte)(unsafe.Pointer(&data)),
+			response: new(consoleResp),
 		}
 	})
 }
 
 func (m *M_Gate) listenHTTP() {
-	listenHTTP(m.cfg.HTTP, func(w http.ResponseWriter, r *http.Request) {
-		cmdStr := r.Header.Get("Command")
+	listenHTTP(m.cfg.HTTP, func(resp *httpResp) {
+		cmdStr := resp.request.Header.Get("Command")
+		protoStr := resp.request.Header.Get("Proto")
+		idStr := resp.request.Header.Get("ID")
+		authorization := resp.request.Header.Get("Authorization")
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			resp.Reply(0, Jerror.Error_decodeError, nil)
+			return
+		}
+
 		cmd, err := strconv.Atoi(cmdStr)
 		if err != nil {
-
+			resp.Reply(id, Jerror.Error_decodeError, nil)
+			return
 		}
+		proto, err := strconv.Atoi(protoStr)
+		if err != nil {
+			resp.Reply(id, Jerror.Error_decodeError, nil)
+			return
+		}
+
+		b := make([]byte, 1024)
+		resp.request.Body.Read(b)
+		m.onCommand(id, cmd, proto, authorization, b, resp)
 	})
+}
+
+func (m *M_Gate) listenWebsocket() {
+	listenWebsocket(m.cfg.Websocket, func(conn *websocket.Conn, r *http.Request) {
+		fmt.Println(r.RequestURI)
+	})
+}
+
+//用户接入(长连接)
+func (m *M_Gate) onAccecpt() {
+
+}
+
+//单条消息(短连接)
+func (m *M_Gate) onCommand(id int64, cmd int, smode int, authorization string, data []byte, response task.Response) {
+	if cmd < 0 {
+		response.Reply(id, Jerror.Error_noHandler, nil)
+		return
+	}
+
+	if !serialize.VaildMode(smode) {
+		response.Reply(id, Jerror.Error_noSupportProto, nil)
+	}
+
+	m.accMgrLocker.Lock()
+	var acc *account
+	if len(authorization) == 0 {
+		acc = m.accMgr.getTempAccount()
+	} else {
+		acc = m.accMgr.getAccount(authorization)
+	}
+	m.accMgrLocker.Unlock()
+	m.commandChan <- &command{
+		acc:      acc,
+		cmd:      Jcommand.Command(cmd),
+		smode:    serialize.SerializeMode(smode),
+		id:       id,
+		data:     data,
+		response: response,
+	}
 }

@@ -23,7 +23,7 @@ func listenConsole(on func(string)) {
 type consoleResp struct {
 }
 
-func (req *consoleResp) Reply(id int64, errCode Jerror.Error, data []byte) error {
+func (r *consoleResp) Reply(id int64, errCode Jerror.Error, data []byte) error {
 	out := consoleOut
 	if errCode != Jerror.Error_ok {
 		out = consoleErr

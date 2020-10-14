@@ -1,2 +1,3 @@
-console = true
+console = false
 http = "localhost:10000"
+websocket = "localhost:10001"

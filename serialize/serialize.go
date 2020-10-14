@@ -8,6 +8,6 @@ const (
 	Protobuf
 )
 
-func Invaild(mode int) bool {
+func VaildMode(mode int) bool {
 	return mode >= int(JSON) && mode <= int(Protobuf)
 }

@@ -1,6 +1,7 @@
 package gate
 
 type config struct {
-	Console bool
-	HTTP    string
+	Console   bool
+	HTTP      string
+	Websocket string
 }
