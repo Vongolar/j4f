@@ -1,24 +1,19 @@
 package config
 
 import (
+	"JFFun/serialize/toml"
 	"flag"
-
-	toml "github.com/BurntSushi/toml"
 )
-
-func DecodeConfigFile(file string, config interface{}) error {
-	_, err := toml.DecodeFile(file, config)
-	return err
-}
 
 var configPath string
 
+//ParseServerConfig 解析服务器启动配置
 func ParseServerConfig() {
 	flag.StringVar(&configPath, "p", "./configs/", "配置文件目录")
 	flag.Parse()
 }
 
+//ParseModuleConfig 解析服务器各模块配置
 func ParseModuleConfig(name string, config interface{}) error {
-	_, err := toml.DecodeFile(configPath+name+".toml", config)
-	return err
+	return toml.DecodeFile(configPath+name+".toml", config)
 }

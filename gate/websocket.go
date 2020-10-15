@@ -2,7 +2,6 @@ package gate
 
 import (
 	Jerror "JFFun/data/error"
-	"JFFun/log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -27,7 +26,7 @@ var upgrader = websocket.Upgrader{
 func onWebsocketAccept(w http.ResponseWriter, r *http.Request, onAccept func(conn *websocket.Conn, r *http.Request)) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Error(log.TAG_CommandReq, err)
+		// log.Error(log.TAG_CommandReq, err)
 		return
 	}
 	onAccept(c, r)
@@ -64,5 +63,5 @@ type websocketResp struct {
 func (r *websocketResp) Reply(id int64, errCode Jerror.Error, data []byte) error {
 	// r.writer.Header().Add("Error", strconv.Itoa(int(errCode)))
 	// _, err := r.writer.Write(data)
-	// return err
+	return nil
 }

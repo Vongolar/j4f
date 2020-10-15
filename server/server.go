@@ -5,6 +5,7 @@ import (
 	"JFFun/data/command"
 	Jerror "JFFun/data/error"
 	"JFFun/log"
+	"JFFun/log/tag"
 	"JFFun/module"
 	"JFFun/task"
 	"context"
@@ -74,7 +75,7 @@ func HandleTask(command command.Command, task *task.Task) {
 	}
 NoHandler:
 	if err := task.Error(Jerror.Error_noHandler, nil); err != nil {
-		log.Error(log.TAG_Server, err)
+		log.Error(tag.Server, err)
 	}
 }
 
@@ -82,7 +83,7 @@ func goRunModule(ctx context.Context, wg *sync.WaitGroup, mod module.Module) {
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				log.Error(log.TAG_Server, err)
+				log.Error(tag.Server, err)
 			}
 			wg.Done()
 		}()
@@ -108,7 +109,7 @@ func (mod *workModule) goWait(ctx context.Context, wg *sync.WaitGroup) {
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				log.Error(log.TAG_Server, err)
+				log.Error(tag.Server, err)
 			}
 			wg.Done()
 		}()
@@ -127,7 +128,7 @@ Wait:
 				handler(task.task)
 			} else {
 				if err := task.task.Error(Jerror.Error_noHandler, nil); err != nil {
-					log.Error(log.TAG_Server, err)
+					log.Error(tag.Server, err)
 				}
 			}
 		}

@@ -8,6 +8,6 @@ const (
 	Protobuf
 )
 
-func VaildMode(mode int) bool {
+func VaildSerializeMode(mode int) bool {
 	return mode >= int(JSON) && mode <= int(Protobuf)
 }

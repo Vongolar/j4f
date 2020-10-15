@@ -1,14 +1,15 @@
 package module
 
 import (
-	Jcommand "JFFun/data/command"
+	"JFFun/data/command"
 	"JFFun/task"
 	"context"
 )
 
+//Module 模块
 type Module interface {
 	GetName() string
 	Init() error
-	GetHandlers() map[Jcommand.Command]func(task *task.Task)
+	GetHandlers() map[command.Command]func(task *task.Task)
 	Run(context.Context)
 }

@@ -7,7 +7,7 @@ import (
 type authority = uint8
 
 const (
-	authRoot   authority = 1 << 7 //控制台权限
+	authRoot   authority = 1 << 7 //root
 	authPlayer authority = 1 << 1 //用户
 	authTemp   authority = 1      //临时
 )
