@@ -3,7 +3,6 @@ package server
 import (
 	"JFFun/config"
 	"JFFun/data/command"
-	Jerror "JFFun/data/error"
 	"JFFun/log"
 	"JFFun/log/tag"
 	"JFFun/module"
@@ -74,9 +73,9 @@ func HandleTask(command command.Command, task *task.Task) {
 		return
 	}
 NoHandler:
-	if err := task.Error(Jerror.Error_noHandler, nil); err != nil {
-		log.Error(tag.Server, err)
-	}
+	// if err := task.Error(Jerror.Error_noHandler, nil); err != nil {
+	// 	log.Error(tag.Server, err)
+	// }
 }
 
 func goRunModule(ctx context.Context, wg *sync.WaitGroup, mod module.Module) {
@@ -127,9 +126,9 @@ Wait:
 			if handler, ok := mod.handlers[task.cmd]; ok {
 				handler(task.task)
 			} else {
-				if err := task.task.Error(Jerror.Error_noHandler, nil); err != nil {
-					log.Error(tag.Server, err)
-				}
+				// if err := task.task.Error(Jerror.Error_noHandler, nil); err != nil {
+				// 	log.Error(tag.Server, err)
+				// }
 			}
 		}
 	}

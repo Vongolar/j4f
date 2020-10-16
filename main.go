@@ -11,7 +11,7 @@ func main() {
 	fmt.Println("Just For Fun")
 
 	err := server.Run([]module.Module{
-		new(gate.M_Gate),
+		new(gate.MGate),
 	}...)
 
 	if err != nil {

@@ -2,29 +2,29 @@ package gate
 
 import (
 	Jconfig "JFFun/config"
+	Jcommand "JFFun/data/command"
 	Jerror "JFFun/data/error"
 	"JFFun/serialize"
 	"JFFun/task"
 	"bytes"
 	"context"
 	"encoding/binary"
-	"sync"
 )
 
-type M_Gate struct {
+//MGate gate模块，负责IO
+type MGate struct {
 	cfg config
 
-	accMgr       accountMgr
-	accMgrLocker sync.Mutex
-
-	taskChan chan *task.Task
+	accMgr accountMgr
 }
 
-func (m *M_Gate) GetName() string {
+//GetName 模块名
+func (m *MGate) GetName() string {
 	return `gate`
 }
 
-func (m *M_Gate) Init() error {
+//Init 模块初始化
+func (m *MGate) Init() error {
 	//解析配置
 	if err := Jconfig.ParseModuleConfig(m.GetName(), &m.cfg); err != nil {
 		return err
@@ -34,12 +34,12 @@ func (m *M_Gate) Init() error {
 	m.accMgr = accountMgr{
 		pool: make(map[string]*account, m.cfg.FitPlayerCount),
 	}
-	m.taskChan = make(chan *task.Task, m.cfg.CommandBuffer)
+	// m.taskChan = make(chan *task.Task, m.cfg.CommandBuffer)
 
 	return nil
 }
 
-func (m *M_Gate) Run(ctx context.Context) {
+func (m *MGate) Run(ctx context.Context) {
 	m.listen()
 Listen:
 	for {
@@ -53,17 +53,19 @@ Listen:
 }
 
 //开启监听服务
-func (m *M_Gate) listen() {
-	m.listenCommand()
+func (m *MGate) listen() {
+	m.listenRequest()
 }
 
-func (m *M_Gate) listenCommand() {
+type onRequestHandler func(authorization string, request task.Request, cmd Jcommand.Command, mode serialize.Mode, data []byte)
+
+func (m *MGate) listenRequest() {
 	if len(m.cfg.HTTP) > 0 {
 		go listenHTTP(m.cfg.HTTP, m.onRequest)
 	}
 }
 
-func (m *M_Gate) onRequest(authority string, task *task.Task, data []byte) {
+func (m *MGate) onRequest(authorization string, request task.Request, cmd Jcommand.Command, mode serialize.Mode, data []byte) {
 	var err error
 	task.Data, err = serialize.DecodeReq(task.CMD, task.SMode, data)
 	if err != nil {

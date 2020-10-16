@@ -13,7 +13,7 @@ const (
 )
 
 var cmdAuthority = map[Jcommand.Command]uint8{
-	Jcommand.Command_ping: 0xff,
+	Jcommand.Command_getOnlinePlayerCount: 0xfe,
 }
 
 func authorityVaid(cmd Jcommand.Command, auth authority) bool {
