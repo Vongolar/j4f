@@ -11,6 +11,7 @@ import (
 var ErrNoCommandDecoder = errors.New("No Command Decoder")
 var ErrNoCommandEncoder = errors.New("No Command Encoder")
 var ErrEncode = errors.New("Encode Error")
+var ErrDecode = errors.New("Deconde Error")
 
 func DecodeReq(cmd command.Command, mode SerializeMode, data []byte) (interface{}, error) {
 	switch cmd {
@@ -32,6 +33,18 @@ func EncodeResp(cmd command.Command, mode SerializeMode, data interface{}) ([]by
 		return encode(mode, data)
 	}
 	return nil, ErrNoCommandEncoder
+}
+
+func decode(mode SerializeMode, raw []byte, out interface{}) error {
+	switch mode {
+	case JSON:
+		return json.Unmarshal(raw, out)
+	case Protobuf:
+		if pd, ok := out.(proto.Message); ok {
+			return proto.Unmarshal(raw, pd)
+		}
+	}
+	return ErrDecode
 }
 
 func encode(mode SerializeMode, data interface{}) ([]byte, error) {

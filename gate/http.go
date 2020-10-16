@@ -13,9 +13,10 @@ func listenHTTP(addr string, on func(authority string, task *task.Task, data []b
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 		cmdStr := r.Header.Get("Command")
-		protoStr := r.Header.Get("SerializeMode")
+		protoStr := r.Header.Get("Serialize-Mode")
 		idStr := r.Header.Get("ID")
 		authorization := r.Header.Get("Authorization")
+		dataLengthStr := r.Header.Get("Data-Length")
 
 		request := &httpRequest{
 			writer:  w,
@@ -40,8 +41,16 @@ func listenHTTP(addr string, on func(authority string, task *task.Task, data []b
 			return
 		}
 
-		b := make([]byte, 1024)
-		if length, err := r.Body.Read(b); err != nil {
+		length, err := strconv.Atoi(dataLengthStr)
+		if err != nil || length < 0 {
+			request.Reply(id, Jerror.Error_decodeError, nil)
+			return
+		}
+
+		b := make([]byte, length)
+
+		n, err := r.Body.Read(b)
+		if err != nil || n != length {
 			request.Reply(id, Jerror.Error_decodeError, nil)
 			return
 		}

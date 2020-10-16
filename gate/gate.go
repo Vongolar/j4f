@@ -2,8 +2,9 @@ package gate
 
 import (
 	Jconfig "JFFun/config"
-	Jcommand "JFFun/data/command"
+	Jerror "JFFun/data/error"
 	"JFFun/serialize"
+	"JFFun/task"
 	"bytes"
 	"context"
 	"encoding/binary"
@@ -16,7 +17,7 @@ type M_Gate struct {
 	accMgr       accountMgr
 	accMgrLocker sync.Mutex
 
-	commandChan chan *command
+	taskChan chan *task.Task
 }
 
 func (m *M_Gate) GetName() string {
@@ -33,7 +34,7 @@ func (m *M_Gate) Init() error {
 	m.accMgr = accountMgr{
 		pool: make(map[string]*account, m.cfg.FitPlayerCount),
 	}
-	m.commandChan = make(chan *command, m.cfg.CommandBuffer)
+	m.taskChan = make(chan *task.Task, m.cfg.CommandBuffer)
 
 	return nil
 }
@@ -45,24 +46,40 @@ Listen:
 		select {
 		case <-ctx.Done():
 			break Listen
-		case c := <-m.commandChan:
-			c.acc.onCommand(c)
+		case task := <-m.taskChan:
+
 		}
 	}
 }
 
 //开启监听服务
 func (m *M_Gate) listen() {
+	m.listenCommand()
 }
 
-type command struct {
-	id    int64
-	cmd   Jcommand.Command
-	smode serialize.SerializeMode
-	acc   *account
-	// response task.Response
-	data []byte
+func (m *M_Gate) listenCommand() {
+	if len(m.cfg.HTTP) > 0 {
+		go listenHTTP(m.cfg.HTTP, m.onRequest)
+	}
 }
+
+func (m *M_Gate) onRequest(authority string, task *task.Task, data []byte) {
+	var err error
+	task.Data, err = serialize.DecodeReq(task.CMD, task.SMode, data)
+	if err != nil {
+		task.Error(Jerror.Error_decodeError, nil)
+	}
+	m.taskChan <- task
+}
+
+// type command struct {
+// 	id    int64
+// 	cmd   Jcommand.Command
+// 	smode serialize.SerializeMode
+// 	acc   *account
+// 	// response task.Response
+// 	data []byte
+// }
 
 // func (m *M_Gate) listenConsole() {
 // 	var cmd int

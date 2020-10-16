@@ -48,12 +48,12 @@ func (acc *account) listenWebsocket(conn *websocket.Conn) {
 		return nil
 	})
 	for {
-		_, data, err := acc.websocketConn.ReadMessage()
+		_, _, err := acc.websocketConn.ReadMessage()
 		if err != nil {
 			acc.websocketConn = nil
 			return
 		}
-		cmd := bytesToInt(data[:4])
+		// cmd := bytesToInt(data[:4])
 	}
 }
 
