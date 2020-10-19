@@ -1,0 +1,2 @@
+# gate模块配置
+gate = ["gate.toml"]

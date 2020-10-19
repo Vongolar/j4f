@@ -1,6 +1,0 @@
-console = false
-http = "localhost:10000"
-websocket = "localhost:10001"
-
-fitPlayerCount = 10 #最优在线玩家数
-commandBuffer = 10 #消息缓冲区大小

@@ -1,21 +1,12 @@
 package main
 
 import (
-	"JFFun/gate"
-	"JFFun/module"
-	"JFFun/server"
-	"fmt"
+	Jlog "JFFun/log"
+	Jtag "JFFun/log/tag"
+	Jserver "JFFun/server"
 )
 
 func main() {
-	fmt.Println("Just For Fun")
-
-	err := server.Run([]module.Module{
-		new(gate.MGate),
-	}...)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("bye")
+	Jlog.Info(Jtag.Server, `Just For Fun`)
+	Jserver.Run()
 }

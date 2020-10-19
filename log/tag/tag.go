@@ -1,5 +1,4 @@
 package tag
 
-const (
-	Server = "server"
-)
+//Server 服务器
+var Server = `[server]`
