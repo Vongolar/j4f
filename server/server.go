@@ -16,4 +16,9 @@ func Run() {
 		Jlog.Error(Jtag.Server, "服务器配置错误", err)
 		return
 	}
+
+	if err := initModules(); err != nil {
+		Jlog.Error(Jtag.Server, "模块初始化错误", err)
+		return
+	}
 }
