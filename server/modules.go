@@ -3,6 +3,7 @@ package server
 import (
 	Jgate "JFFun/gate"
 	Jmodule "JFFun/module"
+	Jschedule "JFFun/schedule"
 )
 
 func initModules() error {
@@ -17,5 +18,9 @@ func initModules() error {
 }
 
 func initModule(m Jmodule.Module, cfg string) error {
-	return m.Init(cfg)
+	if err := m.Init(cfg); err != nil {
+		return err
+	}
+	Jschedule.Regist(m)
+	return nil
 }
