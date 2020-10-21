@@ -7,14 +7,13 @@ import (
 	"os"
 )
 
-var configFile string
+var configPath string
 var cfg config
 
 func parseFlag() error {
-	flag.StringVar(&configFile, "cfg", "./configs/", "server config file")
+	flag.StringVar(&configPath, "cfg", "./configs/", "server config file")
 	flag.Parse()
-	configFile += `server.toml`
-	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+	if _, err := os.Stat(configPath + `server.toml`); os.IsNotExist(err) {
 		return err
 	}
 	return nil
@@ -25,7 +24,7 @@ type config struct {
 }
 
 func parseConfig() error {
-	b, err := ioutil.ReadFile(configFile)
+	b, err := ioutil.ReadFile(configPath + `server.toml`)
 	if err != nil {
 		return err
 	}

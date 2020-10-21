@@ -8,7 +8,7 @@ import (
 
 //Module 模块接口
 type Module interface {
-	Init(cfg string) error
+	Init(cfg []byte) error
 	GetName() string
 	GetHandlers() map[Jcommand.Command]func(task *Jtask.Task)
 	Run(context.Context)

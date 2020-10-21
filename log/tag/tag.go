@@ -14,3 +14,6 @@ var Schedule = `[shedule]`
 func Module(mod string) string {
 	return fmt.Sprintf("[mod %s]", mod)
 }
+
+//Net 网络
+var Net = `[net]`

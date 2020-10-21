@@ -4,6 +4,7 @@ import (
 	Jgate "JFFun/gate"
 	Jmodule "JFFun/module"
 	Jschedule "JFFun/schedule"
+	"io/ioutil"
 )
 
 func initModules() error {
@@ -17,8 +18,13 @@ func initModules() error {
 	return nil
 }
 
-func initModule(m Jmodule.Module, cfg string) error {
-	if err := m.Init(cfg); err != nil {
+func initModule(m Jmodule.Module, file string) error {
+	b, err := ioutil.ReadFile(configPath + file)
+	if err != nil {
+		return err
+	}
+	err = m.Init(b)
+	if err != nil {
 		return err
 	}
 	Jschedule.Regist(m)
