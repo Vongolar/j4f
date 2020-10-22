@@ -1,3 +1,4 @@
 fitAccount = 20
 requestBuffer = 10
 http = "localhost:10000"
+websocket = "localhost:10001"

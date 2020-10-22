@@ -69,15 +69,16 @@ func (m *MGate) analysisHTTP(w http.ResponseWriter, r *http.Request) {
 
 	Jlog.Info(Jtag.Net, fmt.Sprintf("HTTP IP %s -> %d", r.RemoteAddr, n))
 
+	cr := Jtask.NewChannelRequest()
 	request := &request{
-		cmd:            Jcommand.Command(cmd),
-		smode:          Jserialization.SerializateType(smode),
-		accountID:      accID,
-		data:           b,
-		ChannelRequest: Jtask.NewChannelRequest(),
+		cmd:       Jcommand.Command(cmd),
+		smode:     Jserialization.SerializateType(smode),
+		accountID: accID,
+		data:      b,
+		Request:   cr,
 	}
 	m.requestChan <- request
-	resp := request.ChannelRequest.Wait()
+	resp := cr.Wait()
 	if resp == nil {
 		replyHTTP(w, r.RemoteAddr, request.smode, Jerror.Error_undefine, nil)
 		return

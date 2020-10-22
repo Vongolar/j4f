@@ -4,5 +4,6 @@ type config struct {
 	FitAccount    int
 	RequestBuffer int
 
-	HTTP string
+	HTTP      string
+	Websocket string
 }

@@ -6,7 +6,6 @@ import (
 
 //Task 模块之间传递信息载体
 type Task struct {
-	// Command   Jcommand.Command //原始任务命令
 	AccountID string      //用户id，空代表是临时用户
 	Data      interface{} //消息上下文
 	Request
@@ -19,7 +18,10 @@ type Request interface {
 
 //Reply 回应任务
 func (task *Task) Reply(errCode Jerror.Error, data interface{}) error {
-	return nil
+	return task.Request.Reply(&ResponseData{
+		ErrCode: errCode,
+		Data:    data,
+	})
 }
 
 //OK 任务成功回应
