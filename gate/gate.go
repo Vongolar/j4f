@@ -11,6 +11,7 @@ import (
 //MGate gate模块
 type MGate struct {
 	cfg         config
+	accountMgr  *accountManager
 	requestChan chan *request
 }
 
@@ -21,7 +22,11 @@ func (m *MGate) Init(cfg []byte) error {
 		return err
 	}
 
-	m.requestChan = make(chan *request, 10)
+	m.accountMgr = &accountManager{
+		pool: make(map[string]*account, m.cfg.FitAccount),
+	}
+
+	m.requestChan = make(chan *request, m.cfg.RequestBuffer)
 
 	return nil
 }
@@ -45,7 +50,8 @@ func (m *MGate) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case request := <-m.requestChan:
-			request.Reply(&Jtask.ResponseData{})
+			m.handleRequest(request)
+			// request.Reply(&Jtask.ResponseData{})
 		}
 	}
 }
@@ -66,4 +72,8 @@ type request struct {
 	*Jtask.ChannelRequest
 	accountID string
 	data      []byte
+}
+
+func (m *MGate) handleRequest(req *request) {
+
 }
