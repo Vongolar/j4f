@@ -1,15 +1,14 @@
-package module
+package jmodule
 
 import (
-	Jcommand "JFFun/data/command"
-	Jtask "JFFun/task"
+	"JFFun/data/Dcommand"
+	jtask "JFFun/task"
 	"context"
 )
 
-//Module 模块接口
+//Module 模块
 type Module interface {
-	Init(cfg []byte) error
-	GetName() string
-	GetHandlers() map[Jcommand.Command]func(task *Jtask.Task)
-	Run(context.Context)
+	Init(cfg string) error
+	Run(ctx context.Context, name string)
+	GetHandler() map[Dcommand.Command]func(*jtask.Task)
 }

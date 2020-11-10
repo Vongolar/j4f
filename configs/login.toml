@@ -1,0 +1,4 @@
+database = "JFFun"
+cache = "JFFun"
+
+jwtSignKey = "Just For Fun"

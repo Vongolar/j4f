@@ -1,38 +1,65 @@
-package gate
+package jgate
 
 import (
-	Jcommand "JFFun/data/command"
-	Jserialization "JFFun/serialization"
-	Jtask "JFFun/task"
-	"encoding/binary"
+	"JFFun/data/Dcommand"
+	"JFFun/data/Dcommon"
+	"JFFun/data/Derror"
+	jserialization "JFFun/serialization"
 	"errors"
 )
 
-type connect interface {
-	sync(id uint32, cmd Jcommand.Command, resp *Jtask.ResponseData) error
+type iconnect interface {
+	sync(data []byte) error
 	close() error
 }
 
-type connectRequest struct {
-	id  uint32
-	cmd Jcommand.Command
-	connect
+type msgType byte
+
+const (
+	msgRequest  msgType = 0 //请求
+	msgResponse msgType = 1 //回应
+	msgSync     msgType = 2 //通知
+)
+
+type connRequest struct {
+	id   int32
+	conn iconnect
 }
 
-func (r *connectRequest) Reply(resp *Jtask.ResponseData) error {
-	return r.sync(r.id, r.cmd, resp)
-}
-
-var errAnalysisBytesTooShort = errors.New("bytes is too short to analysis")
-
-func analysisBytes(raw []byte) (id uint32, cmd Jcommand.Command, smode Jserialization.SerializateType, data []byte, err error) {
-	if len(raw) < 8 {
-		err = errAnalysisBytesTooShort
-		return
+func (req *connRequest) Reply(err Derror.Error, data interface{}) error {
+	d, e := jserialization.Marshal(jserialization.DefaultMode, data)
+	if e != nil {
+		err = Derror.Error_server
 	}
-	id = binary.BigEndian.Uint32(raw[:4])
-	cmd = Jcommand.Command(binary.BigEndian.Uint32(raw[4:8]))
-	smode = Jserialization.SerializateType(raw[8])
-	data = raw[9:]
-	return
+
+	b, e := jserialization.Marshal(jserialization.DefaultMode, &Dcommon.Response{
+		Id:   req.id,
+		Err:  err,
+		Data: d,
+	})
+	if e != nil {
+		err = Derror.Error_server
+	}
+
+	return req.conn.sync(append([]byte{byte(msgResponse)}, b...))
+}
+
+func (acc *account) sync(scmd Dcommand.SyncCommand, data interface{}) error {
+	if acc.conn != nil {
+		d, e := jserialization.Marshal(jserialization.DefaultMode, data)
+		if e != nil {
+			return e
+		}
+
+		b, e := jserialization.Marshal(jserialization.DefaultMode, &Dcommon.SyncData{
+			Scmd: scmd,
+			Data: d,
+		})
+		if e != nil {
+			return e
+		}
+
+		return acc.conn.sync(append([]byte{byte(msgSync)}, b...))
+	}
+	return errors.New("account not bind connect")
 }

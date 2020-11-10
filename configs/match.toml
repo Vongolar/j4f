@@ -1,0 +1,7 @@
+buff = 10 #任务缓冲
+sureDurSec = 15 #匹配确认时间
+clearMatchMin = 10 #清空长期匹配不到的
+clearMatchIntervalMin = 5 #清空频率
+
+[game.LostCities] #失落的城市
+player = 2

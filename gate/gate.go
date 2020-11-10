@@ -1,118 +1,120 @@
-package gate
+package jgate
 
 import (
-	Jcommand "JFFun/data/command"
-	Jerror "JFFun/data/error"
-	Jrpc "JFFun/rpc"
-	"JFFun/schedule"
-	Jserialization "JFFun/serialization"
-	Jtoml "JFFun/serialization/toml"
-	Jtask "JFFun/task"
+	"JFFun/data/Dcommand"
+	"JFFun/data/Derror"
+	jlog "JFFun/log"
+	jtag "JFFun/log/tag"
+	jschedule "JFFun/schedule"
+	jconfig "JFFun/serialization/config"
+	jtask "JFFun/task"
 	"context"
+	"fmt"
+	"time"
 )
 
-//MGate gate模块
+//MGate 网关服务器
 type MGate struct {
-	cfg         config
-	accountMgr  *accountManager
-	requestChan chan *request
-	acceptChan  chan *acceptRequest
-	onConnClose chan *connCloseEvent
+	name     string
+	cfg      config
+	accounts map[string]*account
 }
 
-//Init 初始化模块
-func (m *MGate) Init(cfg []byte) error {
-	err := Jtoml.Unmarshal(cfg, &m.cfg)
-	if err != nil {
+//Init 初始化
+func (m *MGate) Init(cfg string) error {
+	if err := jconfig.LoadConfig(cfg, &m.cfg); err != nil {
 		return err
 	}
 
-	m.accountMgr = &accountManager{
-		pool: make(map[string]*account, m.cfg.FitAccount),
-	}
+	m.accounts = make(map[string]*account)
 
-	m.requestChan = make(chan *request, m.cfg.RequestBuffer)
-	m.acceptChan = make(chan *acceptRequest, m.cfg.RequestBuffer)
-	m.onConnClose = make(chan *connCloseEvent, 10)
 	return nil
 }
 
-//GetName 模块名
-func (m *MGate) GetName() string {
-	return `gate`
-}
-
 //Run 运行
-func (m *MGate) Run(ctx context.Context) {
-	m.listenNet()
-
+func (m *MGate) Run(ctx context.Context, name string) {
+	m.name = name
+	m.listen()
+	ticker := time.NewTicker(time.Minute * time.Duration(m.cfg.ClearOfflineIntervalMin))
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case request := <-m.requestChan:
-			m.handleRequest(request)
-		case connReq := <-m.acceptChan:
-			m.accountMgr.onAccountAccept(connReq)
-		case event := <-m.onConnClose:
-			m.accountMgr.onAccountConnClose(event)
+		case <-ticker.C:
+			//定期清理不活跃
+			m.clearOfflineAccounts()
 		}
 	}
 }
 
-func (m *MGate) listenNet() {
+func (m *MGate) listen() {
 	if len(m.cfg.HTTP) > 0 {
-		go m.listenHTTP(m.cfg.HTTP)
+		go func() {
+			if err := m.listenHTTP(m.cfg.HTTP); err != nil {
+				jlog.Error(jtag.Gate, "http listen error", err)
+			}
+		}()
 	}
+
 	if len(m.cfg.Websocket) > 0 {
-		go m.listenWebsocket(m.cfg.Websocket)
+		go func() {
+			if err := m.listenWebsocket(m.cfg.Websocket); err != nil {
+				jlog.Error(jtag.Gate, "websocket listen error", err)
+			}
+		}()
 	}
 }
 
-func (m *MGate) getAccountID(authorization string) (string, error) {
-	//解析鉴权信息
-	//...
-	return authorization, nil
-}
-
-type acceptRequest struct {
-	accountID  string
-	conn       connect
-	resultChan chan bool
-}
-
-type request struct {
-	cmd   Jcommand.Command
-	smode Jserialization.SerializateType
-	Jtask.Request
-	accountID string
-	data      []byte
-}
-
-func (m *MGate) handleRequest(req *request) {
-	acc := m.accountMgr.getAccount(req.accountID)
-
-	if !authorityCommand(req.cmd, acc.auth) {
-		req.Reply(&Jtask.ResponseData{ErrCode: Jerror.Error_permissionDenied})
-		return
-	}
-
-	data, err := Jrpc.Decode(req.cmd, req.smode, req.data)
-	if err != nil {
-		req.Reply(&Jtask.ResponseData{ErrCode: Jerror.Error_decode})
-		return
-	}
-	err = schedule.HandleTask(req.cmd, &Jtask.Task{
-		AccountID: acc.id,
-		Data:      data,
-		Request:   req.Request,
-	})
-	if err != nil {
-		req.Reply(&Jtask.ResponseData{ErrCode: Jerror.Error_commandNotAllow})
+func (m *MGate) clearOfflineAccounts() {
+	now := time.Now()
+	for _, acc := range m.accounts {
+		if acc.lastActiveTS.Add(time.Minute * time.Duration(m.cfg.OfflineTimeoutMin)).Before(now) {
+			m.unbind(acc)
+		}
 	}
 }
 
-type connCloseEvent struct {
-	accountID string
-	conn      connect
+func (m *MGate) unbind(acc *account) {
+	delete(m.accounts, acc.id)
+	acc.unbind()
+	jlog.Info(jtag.Gate, fmt.Sprintf("%s 模块解绑用户 %s", m.name, acc.id))
+}
+
+func (m *MGate) authority(auth string) (Derror.Error, string) {
+	req := jtask.NewInnerRequest()
+	task := &jtask.Task{
+		Request: req,
+		Data:    auth,
+	}
+	jschedule.HandleTask(Dcommand.Command_authority, task)
+	err, resp := req.Wait()
+	if err != Derror.Error_ok {
+		return err, ""
+	}
+	if id, ok := resp.(string); ok {
+		return err, id
+	}
+	return Derror.Error_server, ""
+}
+
+func (m *MGate) bindConn(playerID string, conn iconnect) Derror.Error {
+	req := jtask.NewInnerRequest()
+	task := &jtask.Task{
+		PlayerID: playerID,
+		Data:     conn,
+		Request:  req,
+	}
+	jschedule.HandleTaskBy(m.name, Dcommand.Command_bindConn, task)
+	err, _ := req.Wait()
+	return err
+}
+
+func (m *MGate) unbindConn(playerID string) {
+	req := jtask.NewInnerRequest()
+	task := &jtask.Task{
+		PlayerID: playerID,
+		Request:  req,
+	}
+	jschedule.HandleTaskByAll(Dcommand.Command_unbindConn, task)
+	req.Wait()
 }

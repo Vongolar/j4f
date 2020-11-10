@@ -1,32 +1,53 @@
-package server
+package jserver
 
 import (
-	Jtoml "JFFun/serialization/toml"
+	jconfig "JFFun/serialization/config"
 	"flag"
-	"io/ioutil"
 	"os"
 )
 
-var configPath string
+type config struct {
+	Modules map[string]moduleConfig
+	Mysql   map[string]mysqlConfig
+	Redis   map[string]redisConfig
+}
+
+type moduleConfig struct {
+	Buf   int
+	Paths []string
+}
+
+type mysqlConfig struct {
+	User     string
+	Password string
+	Addr     string
+}
+
+type redisConfig struct {
+	Password string
+	DB       int
+	Addr     string
+}
+
 var cfg config
+
+var configPath string
+var serverConfigFile = `server.toml`
 
 func parseFlag() error {
 	flag.StringVar(&configPath, "cfg", "./configs/", "server config file")
 	flag.Parse()
-	if _, err := os.Stat(configPath + `server.toml`); os.IsNotExist(err) {
+	if _, err := os.Stat(configPath + serverConfigFile); err != nil {
 		return err
 	}
 	return nil
 }
 
-type config struct {
-	Gate []string
-}
-
-func parseConfig() error {
-	b, err := ioutil.ReadFile(configPath + `server.toml`)
+func loadCfg() error {
+	err := parseFlag()
 	if err != nil {
 		return err
 	}
-	return Jtoml.Unmarshal(b, &cfg)
+
+	return jconfig.LoadConfig(configPath+serverConfigFile, &cfg)
 }

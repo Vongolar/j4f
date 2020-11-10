@@ -1,41 +1,30 @@
-package task
+package jtask
 
 import (
-	Jerror "JFFun/data/error"
+	"JFFun/data/Derror"
 )
 
-//Task 模块之间传递信息载体
+//Task 协程间
 type Task struct {
-	AccountID string      //用户id，空代表是临时用户
-	Data      interface{} //消息上下文
+	PlayerID string
 	Request
+	Data interface{}
+	Raw  []byte
 }
 
-//Request 任务请求源
-type Request interface {
-	Reply(resp *ResponseData) error
+//OK 成功
+func (task *Task) OK() {
+	task.Error(Derror.Error_ok)
 }
 
-//Reply 回应任务
-func (task *Task) Reply(errCode Jerror.Error, data interface{}) error {
-	return task.Request.Reply(&ResponseData{
-		ErrCode: errCode,
-		Data:    data,
-	})
+//Error 错误
+func (task *Task) Error(err Derror.Error) {
+	task.Reply(err, nil)
 }
 
-//OK 任务成功回应
-func (task *Task) OK(resp interface{}) error {
-	return task.Reply(Jerror.Error_ok, resp)
-}
-
-//Error 任务失败回应
-func (task *Task) Error(errCode Jerror.Error) error {
-	return task.Reply(errCode, nil)
-}
-
-//ResponseData 任务回应数据
-type ResponseData struct {
-	ErrCode Jerror.Error
-	Data    interface{}
+//Reply 回应
+func (task *Task) Reply(err Derror.Error, data interface{}) {
+	if task.Request != nil {
+		task.Request.Reply(err, data)
+	}
 }

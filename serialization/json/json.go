@@ -1,15 +1,18 @@
-package json
+package jjson
 
 import (
 	"encoding/json"
 )
 
-//Marshal json序列化
+//Marshal 序列化json
 func Marshal(v interface{}) ([]byte, error) {
+	if v == nil {
+		return nil, nil
+	}
 	return json.Marshal(v)
 }
 
-//Unmarshal json反序列化
-func Unmarshal(raw []byte, v interface{}) error {
-	return json.Unmarshal(raw, v)
+//UnMarshal 反序列化json
+func UnMarshal(b []byte, out interface{}) error {
+	return json.Unmarshal(b, out)
 }

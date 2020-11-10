@@ -1,4 +1,4 @@
-package protobuf
+package jprotobuf
 
 import (
 	"errors"
@@ -6,21 +6,23 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-//ErrNoProtoMessage 序列化/反序列化 对象不是proto.Message类型
-var ErrNoProtoMessage = errors.New("type of v is not proto.Message")
+var errInterface = errors.New("Error Interface")
 
-//Marshal protobuf序列化
+//Marshal 序列化protobuf
 func Marshal(v interface{}) ([]byte, error) {
+	if v == nil {
+		return nil, nil
+	}
 	if value, ok := v.(proto.Message); ok {
 		return proto.Marshal(value)
 	}
-	return nil, ErrNoProtoMessage
+	return nil, errInterface
 }
 
-//Unmarshal protobuf反序列化
-func Unmarshal(raw []byte, v interface{}) error {
-	if value, ok := v.(proto.Message); ok {
-		return proto.Unmarshal(raw, value)
+//UnMarshal 反序列化protobuf
+func UnMarshal(b []byte, out interface{}) error {
+	if value, ok := out.(proto.Message); ok {
+		return proto.Unmarshal(b, value)
 	}
-	return ErrNoProtoMessage
+	return errInterface
 }

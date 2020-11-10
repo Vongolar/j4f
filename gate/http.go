@@ -1,14 +1,12 @@
-package gate
+package jgate
 
 import (
-	Jcommand "JFFun/data/command"
-	Jerror "JFFun/data/error"
-	Jlog "JFFun/log"
-	Jtag "JFFun/log/tag"
-	Jrpc "JFFun/rpc"
-	Jserialization "JFFun/serialization"
-	Jtask "JFFun/task"
-	"fmt"
+	"JFFun/data/Dcommand"
+	"JFFun/data/Dcommon"
+	"JFFun/data/Derror"
+	jschedule "JFFun/schedule"
+	jserialization "JFFun/serialization"
+	jtask "JFFun/task"
 	"io"
 	"net/http"
 	"strconv"
@@ -27,74 +25,85 @@ func (m *MGate) listenHTTP(addr string) error {
 }
 
 func (m *MGate) analysisHTTP(w http.ResponseWriter, r *http.Request) {
-	cmdStr := r.Header.Get("Command")
-	cmd, err := strconv.Atoi(cmdStr)
-	if err != nil {
-		replyHTTP(w, r.RemoteAddr, Jserialization.JSON, Jerror.Error_badRequest, nil)
-		return
-	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 
-	modeStr := r.Header.Get("Serialize-Mode")
-	smode, err := strconv.Atoi(modeStr)
-	if err != nil {
-		replyHTTP(w, r.RemoteAddr, Jserialization.SerializateType(smode), Jerror.Error_badRequest, nil)
-		return
-	}
-
-	dataLengthStr := r.Header.Get("Content-Length")
-	length, err := strconv.Atoi(dataLengthStr)
-	if err != nil || length < 0 {
-		replyHTTP(w, r.RemoteAddr, Jserialization.SerializateType(smode), Jerror.Error_badRequest, nil)
-		return
-	}
-
-	b := make([]byte, length+1)
-
-	n, err := r.Body.Read(b)
-	if (err != nil && err != io.EOF) || n != length {
-		replyHTTP(w, r.RemoteAddr, Jserialization.SerializateType(smode), Jerror.Error_badRequest, nil)
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	authorization := r.Header.Get("Authorization")
-	var accID string
+	var playerID string
 	if len(authorization) > 0 {
-		//携带认证消息
-		accID, err = m.getAccountID(authorization)
-		if err != nil {
-			replyHTTP(w, r.RemoteAddr, Jserialization.SerializateType(smode), Jerror.Error_unauthorized, nil)
+		//有鉴权消息
+		var authErr Derror.Error
+		authErr, playerID = m.authority(authorization)
+		if authErr != Derror.Error_ok {
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 	}
 
-	Jlog.Info(Jtag.Net, fmt.Sprintf("HTTP IP %s -> %d", r.RemoteAddr, n))
-
-	cr := Jtask.NewChannelRequest()
-	request := &request{
-		cmd:       Jcommand.Command(cmd),
-		smode:     Jserialization.SerializateType(smode),
-		accountID: accID,
-		data:      b,
-		Request:   cr,
-	}
-	m.requestChan <- request
-	resp := cr.Wait()
-	if resp == nil {
-		replyHTTP(w, r.RemoteAddr, request.smode, Jerror.Error_undefine, nil)
+	lengthStr := r.Header.Get("Content-Length")
+	length, _ := strconv.Atoi(lengthStr)
+	b := make([]byte, length)
+	_, err := r.Body.Read(b)
+	if err != nil && err != io.EOF {
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	replyHTTP(w, r.RemoteAddr, request.smode, resp.ErrCode, resp.Data)
+
+	requestData := new(Dcommon.Request)
+	if err = jserialization.UnMarshal(jserialization.DefaultMode, b, requestData); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	request := &httpRequest{
+		id: requestData.Id,
+		r:  r,
+		w:  w,
+		cr: jtask.NewInnerRequest(),
+	}
+	jschedule.HandleTaskBy(m.name, Dcommand.Command_newRequest, &jtask.Task{
+		Data:     requestData,
+		Request:  request,
+		PlayerID: playerID,
+	})
+	request.reply(request.cr.Wait())
+	return
 }
 
-func replyHTTP(w http.ResponseWriter, remoteAddr string, st Jserialization.SerializateType, errCode Jerror.Error, data interface{}) error {
-	w.Header().Add(`Error`, strconv.Itoa(int(errCode)))
-	b, err := Jrpc.Encode(st, data)
-	if err != nil {
-		return err
+type httpRequest struct {
+	id int32
+	r  *http.Request
+	w  http.ResponseWriter
+	cr *jtask.InnerRequest
+}
+
+func (req *httpRequest) Reply(err Derror.Error, data interface{}) error {
+	return req.cr.Reply(err, data)
+}
+
+func (req *httpRequest) reply(err Derror.Error, data interface{}) error {
+	d, e := jserialization.Marshal(jserialization.DefaultMode, data)
+	if e != nil {
+		req.w.WriteHeader(http.StatusInternalServerError)
+		return e
 	}
-	n, err := w.Write(b)
-	if err == nil {
-		Jlog.Info(Jtag.Net, fmt.Sprintf("HTTP IP %s <- %d", remoteAddr, n))
+
+	b, e := jserialization.Marshal(jserialization.DefaultMode, &Dcommon.Response{
+		Id:   req.id,
+		Err:  err,
+		Data: d,
+	})
+	if e != nil {
+		req.w.WriteHeader(http.StatusInternalServerError)
+		return e
 	}
-	return err
+
+	_, e = req.w.Write(b)
+	return e
 }

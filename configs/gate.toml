@@ -1,4 +1,7 @@
-fitAccount = 20
-requestBuffer = 10
-http = "localhost:10000"
-websocket = "localhost:10001"
+database = "JFFun"
+
+clearOfflineIntervalMin = 10
+offlineTimeoutMin = 10
+
+http = "192.168.0.109:10000"
+websocket = "192.168.0.109:10001"

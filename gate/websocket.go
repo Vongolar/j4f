@@ -1,8 +1,12 @@
-package gate
+package jgate
 
 import (
-	Jcommand "JFFun/data/command"
-	Jtask "JFFun/task"
+	"JFFun/data/Dcommand"
+	"JFFun/data/Dcommon"
+	"JFFun/data/Derror"
+	jschedule "JFFun/schedule"
+	jserialization "JFFun/serialization"
+	jtask "JFFun/task"
 	"net/http"
 	"strings"
 
@@ -23,13 +27,16 @@ func (m *MGate) listenWebsocket(addr string) error {
 func (m *MGate) onAcceptWebsocket(w http.ResponseWriter, r *http.Request) {
 	authorization := strings.TrimLeft(r.URL.String(), "/")
 	if len(authorization) == 0 {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	accID, err := m.getAccountID(authorization)
-	if err != nil {
+	authErr, playerID := m.authority(authorization)
+	if authErr != Derror.Error_ok {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
@@ -38,41 +45,35 @@ func (m *MGate) onAcceptWebsocket(w http.ResponseWriter, r *http.Request) {
 		Conn: c,
 	}
 
-	sucChan := make(chan bool)
-	cr := &acceptRequest{
-		accountID:  accID,
-		conn:       conn,
-		resultChan: sucChan,
-	}
-	m.acceptChan <- cr
-	if suc := <-sucChan; !suc {
+	bindErr := m.bindConn(playerID, conn)
+	if bindErr != Derror.Error_ok {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+
 	for {
 		_, b, err := conn.ReadMessage()
+
 		if err != nil {
-			m.onConnClose <- &connCloseEvent{
-				accountID: accID,
-				conn:      conn,
-			}
+			m.unbindConn(playerID)
 			return
 		}
-		id, cmd, smode, raw, err := analysisBytes(b)
-		if err != nil {
-			break
+
+		requestData := new(Dcommon.Request)
+		if err = jserialization.UnMarshal(jserialization.DefaultMode, b, requestData); err != nil {
+			continue
 		}
-		req := &connectRequest{
-			id:      id,
-			cmd:     cmd,
-			connect: conn,
+
+		req := &connRequest{
+			id:   requestData.Id,
+			conn: conn,
 		}
-		m.requestChan <- &request{
-			cmd:       cmd,
-			data:      raw,
-			accountID: accID,
-			Request:   req,
-			smode:     smode,
-		}
+
+		jschedule.HandleTaskBy(m.name, Dcommand.Command_newRequest, &jtask.Task{
+			Data:     requestData,
+			Request:  req,
+			PlayerID: playerID,
+		})
 	}
 }
 
@@ -80,8 +81,8 @@ type websocketConn struct {
 	*websocket.Conn
 }
 
-func (conn *websocketConn) sync(id uint32, cmd Jcommand.Command, resp *Jtask.ResponseData) error {
-	return conn.WriteMessage(websocket.BinaryMessage, nil)
+func (conn *websocketConn) sync(data []byte) error {
+	return conn.WriteMessage(websocket.BinaryMessage, data)
 }
 
 func (conn *websocketConn) close() error {

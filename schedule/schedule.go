@@ -1,125 +1,146 @@
-package schedule
+package jschedule
 
 import (
-	Jcommand "JFFun/data/command"
-	Jlog "JFFun/log"
-	Jtag "JFFun/log/tag"
-	Jmodule "JFFun/module"
-	Jtask "JFFun/task"
+	"JFFun/data/Dcommand"
+	"JFFun/data/Derror"
+	jtask "JFFun/task"
 	"context"
-	"errors"
-	"fmt"
+	"math"
 	"sync"
+	"time"
 )
 
-var workers map[string][]*worker
-var handlers map[Jcommand.Command][]*worker
+//HandleTask 自动选取一个最优的模块处理消息
+func HandleTask(cmd Dcommand.Command, t *jtask.Task) {
+	if mods, exist := handlerRoute[cmd]; exist && len(mods) > 0 {
+		var fastMod *module
+		minDelay := time.Duration(math.MaxInt64)
+		for _, mod := range mods {
+			if len(mod.taskChannel) == 0 && mod.isAvailability() {
+				mod.taskChannel <- &task{
+					cmd:  cmd,
+					task: t,
+				}
+				return
+			}
 
-//Regist 注册模块
-func Regist(module Jmodule.Module) {
-	if workers == nil {
-		workers = make(map[string][]*worker)
-	}
-
-	if handlers == nil {
-		handlers = make(map[Jcommand.Command][]*worker)
-	}
-
-	w := &worker{
-		mod:         module,
-		taskChannel: make(chan *task, 6),
-		handlers:    module.GetHandlers(),
-	}
-
-	for cmd := range w.handlers {
-		if _, ok := handlers[cmd]; !ok {
-			handlers[cmd] = make([]*worker, 0)
+			if mod.isAvailability() && mod.getDelay() < minDelay {
+				minDelay = mod.getDelay()
+				fastMod = mod
+			}
 		}
-		handlers[cmd] = append(handlers[cmd], w)
+		fastMod.taskChannel <- &task{
+			cmd:  cmd,
+			task: t,
+		}
+		return
 	}
+	t.Error(Derror.Error_noHandler)
+}
 
-	if _, ok := workers[module.GetName()]; !ok {
-		workers[module.GetName()] = make([]*worker, 0)
+//HandleTaskBy 指定模块
+func HandleTaskBy(module string, cmd Dcommand.Command, t *jtask.Task) {
+	if mods, exist := handlerRoute[cmd]; exist && len(mods) > 0 {
+		for _, mod := range mods {
+			if mod.name == module {
+				mod.taskChannel <- &task{
+					cmd:  cmd,
+					task: t,
+				}
+				return
+			}
+		}
 	}
+	t.Error(Derror.Error_noHandler)
+}
 
-	workers[module.GetName()] = append(workers[module.GetName()], w)
+//HandleTaskUntilOK 顺序执行直到一个正确返回,如果没有正确的返回最后一个结果
+func HandleTaskUntilOK(cmd Dcommand.Command, t *jtask.Task) {
+	if mods, exist := handlerRoute[cmd]; exist && len(mods) > 0 {
+		for i, mod := range mods {
+			creq := jtask.NewInnerRequest()
+			ctask := &jtask.Task{
+				Request:  creq,
+				PlayerID: t.PlayerID,
+				Data:     t.Data,
+				Raw:      t.Raw,
+			}
+			mod.taskChannel <- &task{
+				cmd:  cmd,
+				task: ctask,
+			}
+			if err, resp := creq.Wait(); err == Derror.Error_ok || i+1 == len(mods) {
+				t.Reply(err, resp)
+				return
+			}
+		}
+	}
+	t.Error(Derror.Error_noHandler)
+}
+
+//MutliResponse 多模块执行响应
+type MutliResponse = map[string]interface{}
+
+//HandleTaskByAll 所有模块顺序执行，只返回正确的结果,注意如果在模块Handler线程内会导致线程卡死
+func HandleTaskByAll(cmd Dcommand.Command, t *jtask.Task) {
+	HandleTaskByOthers("", cmd, t)
+}
+
+//HandleTaskByOthers 除了selfMoudle以外，所有模块顺序执行，只返回正确的结果
+func HandleTaskByOthers(selfMoudle string, cmd Dcommand.Command, t *jtask.Task) {
+	if mods, exist := handlerRoute[cmd]; exist && len(mods) > 0 {
+		res := make(MutliResponse, len(mods))
+		for _, mod := range mods {
+			if mod.name == selfMoudle {
+				continue
+			}
+			req := jtask.NewInnerRequest()
+			st := &jtask.Task{
+				Request:  req,
+				PlayerID: t.PlayerID,
+				Raw:      t.Raw,
+				Data:     t.Data,
+			}
+			mod.taskChannel <- &task{
+				cmd:  cmd,
+				task: st,
+			}
+			if err, resp := req.Wait(); err == Derror.Error_ok {
+				res[mod.name] = resp
+			}
+		}
+		t.Reply(Derror.Error_ok, res)
+		return
+	}
+	t.Error(Derror.Error_noHandler)
+}
+
+//SyncData 通知结构
+type SyncData struct {
+	Scmd Dcommand.SyncCommand
+	Data interface{}
+}
+
+//Sync 通知玩家
+func Sync(scmd Dcommand.SyncCommand, data interface{}, playerID string) {
+	t := &jtask.Task{
+		PlayerID: playerID,
+		Data: &SyncData{
+			Scmd: scmd,
+			Data: data,
+		},
+	}
+	if mods, exist := handlerRoute[Dcommand.Command_sync]; exist && len(mods) > 0 {
+		for _, mod := range mods {
+			mod.taskChannel <- &task{
+				cmd:  Dcommand.Command_sync,
+				task: t,
+			}
+		}
+	}
 }
 
 //Run 运行
 func Run(ctx context.Context, wg *sync.WaitGroup) {
-	for name, works := range workers {
-		Jlog.Info(Jtag.Schedule, fmt.Sprintf("注册 %s 模块 %d 个", name, len(works)))
-
-		for _, work := range works {
-			wg.Add(1)
-			goRunModule(ctx, work.mod, wg)
-		}
-
-		for _, work := range works {
-			wg.Add(1)
-			goModuleListen(ctx, work, wg)
-		}
-	}
-}
-
-//ErrNoHandler4Command 没有处理器
-var ErrNoHandler4Command = errors.New("No handler for command")
-
-//HandleTask 处理任务
-func HandleTask(cmd Jcommand.Command, t *Jtask.Task) error {
-	if workers, ok := handlers[cmd]; ok {
-		best := chooseBestWorker(workers)
-		if best == nil {
-			return ErrNoHandler4Command
-		}
-		best.taskChannel <- &task{
-			cmd:  cmd,
-			task: t,
-		}
-		return nil
-	}
-	return ErrNoHandler4Command
-}
-
-func goRunModule(ctx context.Context, mod Jmodule.Module, wg *sync.WaitGroup) {
-	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				Jlog.Error(Jtag.Module(mod.GetName()), "错误关闭", err)
-			}
-			wg.Done()
-		}()
-		mod.Run(ctx)
-	}()
-}
-
-func goModuleListen(ctx context.Context, worker *worker, wg *sync.WaitGroup) {
-	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				Jlog.Error(Jtag.Module(worker.mod.GetName()), "监听错误关闭", err)
-			}
-			wg.Done()
-		}()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case task := <-worker.taskChannel:
-				worker.handleTask(task)
-			}
-		}
-	}()
-}
-
-func chooseBestWorker(ws []*worker) (best *worker) {
-	var delay int64 = -1
-	best = nil
-	for _, w := range ws {
-		if delay < 0 || delay > w.delay {
-			best = w
-		}
-	}
-	return
+	goRunModules(ctx, wg)
 }
