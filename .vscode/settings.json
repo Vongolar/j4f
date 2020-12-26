@@ -1,0 +1,22 @@
+{
+    "fileheader.customMade": {
+        "Author": "Vongola",
+        "FilePath": "Do not editor",
+        "Date": "Do not editor",
+        "Description": "file content",
+        "描述": "文件描述",
+        "LastEditTime": "Do not editor",
+        "LastEditors": "Vongola",
+    },
+    "fileheader.cursorMode": {
+        "description": "",
+        "描述": "",
+        "param": "",
+        "return": ""
+    },
+    "go.lintFlags": [
+        "-min_confidence=.8",
+        "--disable=all",
+        "--enable=errcheck"
+    ],
+}

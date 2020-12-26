@@ -1,7 +1,0 @@
-database = "JFFun"
-
-clearOfflineIntervalMin = 10
-offlineTimeoutMin = 10
-
-http = "192.168.0.109:10000"
-websocket = "192.168.0.109:10001"
