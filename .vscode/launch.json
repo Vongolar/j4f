@@ -9,9 +9,9 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceRoot}/server/main.go",
+            "program": "${workspaceRoot}/main.go",
             "env": {},
-            "args": ["-cfg","${workspaceRoot}/configs/"]
+            "args": ["-cfg","${workspaceRoot}/cfg/s1.toml;${workspaceRoot}/cfg/s2.toml;${workspaceRoot}/cfg/s3.toml;"]
         }
     ]
 }

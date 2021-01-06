@@ -1,0 +1,5 @@
+name = "s3"
+
+[[modules]]
+    name = "gate1"
+    path = "gate.toml"

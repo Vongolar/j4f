@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package data;
+option go_package = ".;data";
+
+enum GameType {
+    _ = 0;
+    LostCities = 1;
+}
+
+message action {
+    int32 act = 1;
+    bytes data = 2;
+}
+
+message stateEnd {
+    int32 state = 1;
+}
+
+message syncGameState {
+    int32 state = 1;
+    bytes data = 2;
+}
+
+message syncGamePlayerAct {
+    int32 act = 1;
+    string player = 2;
+    bytes data = 3;
+}
+
+//等待
+message waitDeadLine {
+    int64 ts = 1;
+    string player = 2;
+}
+
+//单人匹配
+message matchReq {
+    GameType game = 1;
+}
+
+enum matchState {
+    noMatch = 0; //不在匹配中
+    matching = 1; //匹配中
+    waitSure = 2; //等待确认
+    sure = 3; //确认状态
+}
+
+//匹配状态
+message matchStateInfo {
+    matchState state = 1;
+    GameType game = 2;
+    int64 startTS = 3;
+    int64 sureDeadLineTS = 4;
+}
+
+//匹配成功信息
+message matchSucInfo {
+    matchStateInfo info = 1;
+    repeated string players = 2; //匹配成功的玩家
+}

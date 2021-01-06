@@ -1,0 +1,13 @@
+name = "s1"
+
+[[modules]]
+    name = "gate1"
+    path = "gate.toml"
+
+[[modules]]
+    name = "gate1"
+    path = "gate.toml"
+
+[[modules]]
+    name = "gate1"
+    path = "gate.toml"
