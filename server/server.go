@@ -13,8 +13,16 @@ import (
 	"sync"
 )
 
-func Run(modules ...[]module.Module) {
+func Run(modules ...module.Module) {
+	RunServers(modules)
+}
+
+func RunServers(modules ...[]module.Module) {
 	release, cfgs := parseFlag()
+
+	if release && len(modules) > 1 {
+		jlog.Warning(`it's better to pack all modules to one server.`)
+	}
 
 	if len(modules) > len(cfgs) {
 		jlog.Error(`length of args '-cfg' less than server's length`)
@@ -37,13 +45,13 @@ func Run(modules ...[]module.Module) {
 		ss = append(ss, &server{name: cfg.Name, cfg: *cfg})
 	}
 
-	var wg sync.WaitGroup
 	ctx := context.Background()
 	var cancel context.CancelFunc
 	if release {
 		ctx, cancel = context.WithCancel(context.Background())
 	}
 
+	var wg sync.WaitGroup
 	for i, s := range ss {
 		server, mods := s, modules[i]
 		wg.Add(1)
@@ -53,12 +61,10 @@ func Run(modules ...[]module.Module) {
 		}()
 	}
 
-	if release {
-		signalChan := make(chan os.Signal, 1)
-		signal.Notify(signalChan, os.Interrupt)
-		<-signalChan
-		cancel()
-	}
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	<-signalChan
+	cancel()
 
 	wg.Wait()
 }
@@ -83,18 +89,20 @@ func (s *server) run(ctx context.Context, modules ...module.Module) {
 
 	s.schedule = new(schedule.Schedule)
 	for i, m := range modules {
-		if err := s.schedule.RegistModule(m); err != nil {
+		if err := s.schedule.RegistModule(m, s.cfg.Modules[i].Name, s.cfg.Modules[i].Path); err != nil {
 			jlog.Error(fmt.Sprintf("server %s regist module %s error.", s.name, s.cfg.Modules[i].Name), err)
 			return
 		}
 	}
 
 	jlog.Info(fmt.Sprintf("server %s init success", s.name))
+
+	s.schedule.Run(ctx)
 }
 
 func (s *server) initModules(modules []module.Module) error {
 	for i, m := range modules {
-		if err := m.Init(s.cfg.Modules[i].Path); err != nil {
+		if err := m.Init(s.cfg.Modules[i].Name, s.cfg.Modules[i].Path); err != nil {
 			return err
 		}
 	}

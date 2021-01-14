@@ -1,5 +1,10 @@
 package module
 
+import (
+	"context"
+)
+
 type Module interface {
-	Init(configPath string) error
+	Init(name string, configPath string) error
+	Run(ctx context.Context)
 }

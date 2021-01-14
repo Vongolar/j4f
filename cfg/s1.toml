@@ -5,9 +5,9 @@ name = "s1"
     path = "gate.toml"
 
 [[modules]]
-    name = "gate1"
-    path = "gate.toml"
+    name = "gate2"
+    path = "gate2.toml"
 
 [[modules]]
-    name = "gate1"
+    name = "gate3"
     path = "gate.toml"

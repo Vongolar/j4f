@@ -9,8 +9,9 @@ import (
 )
 
 func parseFlag() (bool, []string) {
-	cfg := flag.String("cfg", "", `服务器配置文件，多个服务器用';'隔开`)
 	release := flag.Bool("r", true, `release 模式`)
+	cfg := flag.String("cfg", "", `服务器配置文件，多个服务器用';'隔开`)
+
 	flag.Parse()
 	return *release, strings.Split(*cfg, ";")
 }

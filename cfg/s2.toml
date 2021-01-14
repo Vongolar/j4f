@@ -5,5 +5,5 @@ name = "s2"
     path = "gate.toml"
 
 [[modules]]
-    name = "gate1"
+    name = "gate2"
     path = "gate.toml"
