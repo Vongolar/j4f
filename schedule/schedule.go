@@ -1,3 +1,12 @@
+/*
+ * @Author: Vongola
+ * @LastEditTime: 2021-01-15 11:23:22
+ * @LastEditors: Vongola
+ * @Description: file content
+ * @FilePath: \JFFun\schedule\schedule.go
+ * @Date: 2021-01-15 10:14:10
+ * @描述: 文件描述
+ */
 package schedule
 
 import (
@@ -18,6 +27,8 @@ type mod struct {
 	m       module.Module
 	channel chan *task.Task
 	cfg     moduleConfig
+	h2r     chan interface{}
+	r2h     chan interface{}
 }
 
 func (s *Schedule) RegistModule(m module.Module, name string, cfgPath string) error {
@@ -34,6 +45,8 @@ func (s *Schedule) RegistModule(m module.Module, name string, cfgPath string) er
 		m:       m,
 		cfg:     *cfg,
 		channel: make(chan *task.Task, cfg.Buffer),
+		h2r:     make(chan interface{}),
+		r2h:     make(chan interface{}),
 	}
 
 	return nil
@@ -70,6 +83,9 @@ func (s *Schedule) goListen(ctx context.Context, wg *sync.WaitGroup, name string
 			select {
 			case <-ctx.Done():
 				return
+			case msg := <-mod.r2h:
+				mod.m.HandleRunMsg(msg)
+			case <-mod.channel:
 
 			}
 		}
