@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"sync"
 )
 
@@ -19,6 +18,12 @@ func Run(modules ...module.Module) {
 
 func RunServers(modules ...[]module.Module) {
 	release, cfgs := parseFlag()
+
+	if release {
+		jlog.Info(`run in release mode`)
+	} else {
+		jlog.Info(`run in debug mode`)
+	}
 
 	if release && len(modules) > 1 {
 		jlog.Warning(`it's better to pack all modules to one server.`)
@@ -30,19 +35,14 @@ func RunServers(modules ...[]module.Module) {
 	}
 
 	var ss []*server
-	for i, _ := range modules {
+	for i := range modules {
 		cfg := new(config)
-		if err := jconfig.ParseFileConfig(cfgs[i], cfg); err != nil {
-			jlog.Error(fmt.Sprintf("parse config file '%s' error", cfgs[i]), err)
+		if err := jconfig.ParseLocalConfig(cfgs[i], cfg); err != nil {
+			jlog.Error(fmt.Sprintf("parse server config file '%s' error", cfgs[i]), err)
 			return
 		}
 
-		dir, _ := filepath.Split(cfgs[i])
-		if err := cfg.checkModuleConfigExist(dir); err != nil {
-			return
-		}
-
-		ss = append(ss, &server{name: cfg.Name, cfg: *cfg})
+		ss = append(ss, &server{cfg: *cfg})
 	}
 
 	ctx := context.Background()
@@ -51,53 +51,51 @@ func RunServers(modules ...[]module.Module) {
 		ctx, cancel = context.WithCancel(context.Background())
 	}
 
-	var wg sync.WaitGroup
+	var mwg sync.WaitGroup
 	for i, s := range ss {
 		server, mods := s, modules[i]
-		wg.Add(1)
-		go func() {
-			server.run(ctx, mods...)
-			wg.Done()
-		}()
+		server.run(ctx, &mwg, mods...)
 	}
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 	<-signalChan
-	cancel()
 
-	wg.Wait()
+	if cancel != nil {
+		cancel()
+	}
+
+	mwg.Wait()
 }
 
 type server struct {
 	schedule *schedule.Schedule
 
-	name string
-	cfg  config
+	cfg config
 }
 
-func (s *server) run(ctx context.Context, modules ...module.Module) {
+func (s *server) run(ctx context.Context, wg *sync.WaitGroup, modules ...module.Module) {
 	if len(s.cfg.Modules) < len(modules) {
-		jlog.Error(fmt.Sprintf("server %s's module configs less than modules.", s.name))
+		jlog.Error(fmt.Sprintf("server %s's module configs less than modules.", s.cfg.Name))
 		return
 	}
 
 	if err := s.initModules(modules); err != nil {
-		jlog.Error(fmt.Sprintf("server %s init modules error.", s.name), err)
+		jlog.Error(fmt.Sprintf("server %s init modules error.", s.cfg.Name), err)
 		return
 	}
 
 	s.schedule = new(schedule.Schedule)
 	for i, m := range modules {
-		if err := s.schedule.RegistModule(m, s.cfg.Modules[i].Name, s.cfg.Modules[i].Path); err != nil {
-			jlog.Error(fmt.Sprintf("server %s regist module %s error.", s.name, s.cfg.Modules[i].Name), err)
+		if err := s.schedule.RegistModule(s.cfg.Modules[i].Name, m, s.cfg.Modules[i].Path); err != nil {
+			jlog.Error(fmt.Sprintf("server %s regist module %s error.", s.cfg.Name, s.cfg.Modules[i].Name), err)
 			return
 		}
 	}
 
-	jlog.Info(fmt.Sprintf("server %s init success", s.name))
+	jlog.Info(fmt.Sprintf("server %s init success", s.cfg.Name))
 
-	s.schedule.Run(ctx)
+	s.schedule.Run(ctx, wg)
 }
 
 func (s *server) initModules(modules []module.Module) error {

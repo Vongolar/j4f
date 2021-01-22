@@ -1,9 +1,9 @@
 name = "s2"
 
 [[modules]]
-    name = "gate1"
+    name = "gate2_1"
     path = "gate.toml"
 
 [[modules]]
-    name = "gate2"
+    name = "gate2_2"
     path = "gate.toml"

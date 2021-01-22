@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-01-15 11:58:29
+ * @LastEditTime: 2021-01-22 18:29:08
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\gate\handler.go
@@ -12,12 +12,15 @@ package gate
 import (
 	"JFFun/data"
 	"JFFun/task"
+	"fmt"
 )
 
-func (m *M_Gate) GetHandler() map[data.Command]func(t *task.Task) {
-	return map[data.Command]func(t *task.Task){}
+func (m *M_Gate) GetHandlers() map[data.Command]task.Handler {
+	return map[data.Command]task.Handler{
+		data.Command_ping: m.Ping,
+	}
 }
 
-func (m *M_Gate) HandleRunMsg(msg interface{}) {
-
+func (m *M_Gate) Ping(task *task.Task) {
+	fmt.Println("ping")
 }

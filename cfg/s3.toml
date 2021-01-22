@@ -1,5 +1,5 @@
 name = "s3"
 
 [[modules]]
-    name = "gate1"
+    name = "gate3_1"
     path = "gate.toml"

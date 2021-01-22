@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-01-15 11:23:45
+ * @LastEditTime: 2021-01-22 19:03:15
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\module\module.go
@@ -10,11 +10,13 @@
 package module
 
 import (
+	"JFFun/data"
+	"JFFun/task"
 	"context"
 )
 
 type Module interface {
-	Init(name string, configPath string) error
-	Run(ctx context.Context)
-	HandleRunMsg(msg interface{})
+	Init(serverName string, configPath string) error
+	Run(context.Context, task.Execer, chan task.TaskHandlerTuple)
+	GetHandlers() map[data.Command]task.Handler
 }
