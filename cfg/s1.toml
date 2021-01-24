@@ -1,13 +1,4 @@
 name = "s1"
 
-[[modules]]
-    name = "gate1_1"
-    path = "gate.toml"
-
-[[modules]]
-    name = "gate1_2"
-    path = "gate2.toml"
-
-[[modules]]
-    name = "gate1_3"
-    path = "gate.toml"
+[module]
+    t1 = "template.toml"

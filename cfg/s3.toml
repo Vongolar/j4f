@@ -1,5 +1,6 @@
 name = "s3"
 
-[[modules]]
-    name = "gate3_1"
-    path = "gate.toml"
+[module]
+    t1 = "template.toml"
+    t2 = "template.toml"
+    t3 = "template.toml"

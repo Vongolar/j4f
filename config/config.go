@@ -1,9 +1,9 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-01-22 16:04:11
+ * @LastEditTime: 2021-01-23 23:48:09
  * @LastEditors: Vongola
  * @Description: file content
- * @FilePath: \JFFun\config\config.go
+ * @FilePath: /JFFun/config/config.go
  * @Date: 2021-01-14 10:22:11
  * @描述: 解析配置
  */
@@ -33,7 +33,7 @@ func ParseLocalConfig(file string, out interface{}) error {
 		if err != nil {
 			return err
 		}
-		return parseLocalConfig(f, out)
+		return parseFileConfig(f, out)
 	}
 
 	//猜测路径
@@ -49,13 +49,13 @@ func ParseLocalConfig(file string, out interface{}) error {
 			return err
 		}
 
-		return parseLocalConfig(f, out)
+		return parseFileConfig(f, out)
 	}
 
-	return fmt.Errorf(fmt.Sprintf("can't find config file %s.", file))
+	return fmt.Errorf(fmt.Sprintf("找不到配置文件 %s 。", file))
 }
 
-func parseLocalConfig(f *os.File, out interface{}) error {
+func parseFileConfig(f *os.File, out interface{}) error {
 	defer f.Close()
 	return parseConfig(f, filepath.Ext(f.Name()), out)
 }
@@ -69,6 +69,6 @@ func parseConfig(r io.Reader, ext string, out interface{}) error {
 	case jyaml.GetExt():
 		return jyaml.Decode(r, out)
 	default:
-		return fmt.Errorf("not support to decode config with '%s' extension.", ext)
+		return fmt.Errorf("不支持 %s 后缀的配置文件。", ext)
 	}
 }
