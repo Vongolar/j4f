@@ -1,10 +1,10 @@
 /*
  * @Author: Vongola
- * @FilePath: /JFFun/server/server.go
+ * @FilePath: \JFFun\server\server.go
  * @Date: 2021-01-23 23:32:09
  * @Description: file content
  * @描述: 文件描述
- * @LastEditTime: 2021-01-24 22:46:37
+ * @LastEditTime: 2021-01-29 15:36:34
  * @LastEditors: Vongola
  */
 
@@ -55,8 +55,8 @@ func RunServers(servers ...map[string]module.Module) {
 
 type server struct {
 	local *localSchedule
-	mods  []*mod
-	cfg   serverConfig
+
+	cfg serverConfig
 }
 
 type mod struct {
@@ -107,10 +107,9 @@ func (s *server) run(ctx context.Context, wg *sync.WaitGroup, cfgPath string, mo
 			cfg:  *mcfg,
 		}
 		s.local.registHandlers(newModule)
-		s.mods = append(s.mods, newModule)
 	}
 
-	for _, m := range s.mods {
+	for _, m := range s.local.mods {
 		s.goRunModule(wg, m)
 	}
 }

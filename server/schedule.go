@@ -1,11 +1,10 @@
 /*
  * @Author: Vongola
- * @FilePath: /JFFun/server/schedule.go
- * @Date: 2021-01-24 00:05:39
- * @Description: file content
- * @描述: 文件描述
- * @LastEditTime: 2021-01-24 22:44:26
+ * @LastEditTime: 2021-01-29 15:50:58
  * @LastEditors: Vongola
+ * @Description: file content
+ * @FilePath: \JFFun\server\schedule.go
+ * @Date: 2021-01-29 15:50:53
+ * @描述: 文件描述
  */
-
 package server

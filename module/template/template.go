@@ -1,10 +1,10 @@
 /*
  * @Author: Vongola
- * @FilePath: /JFFun/module/template/template.go
+ * @FilePath: \JFFun\module\template\template.go
  * @Date: 2021-01-24 21:15:46
  * @Description: file content
  * @描述: 文件描述
- * @LastEditTime: 2021-01-24 22:38:37
+ * @LastEditTime: 2021-01-29 15:38:39
  * @LastEditors: Vongola
  */
 package template
@@ -14,11 +14,11 @@ import (
 	"JFFun/schedule"
 	"JFFun/task"
 	"context"
-	"time"
 )
 
 type MTemplate struct {
-	ctx context.Context
+	ctx      context.Context
+	handlers map[data.Command]task.Handler
 }
 
 func (m *MTemplate) Init(ctx context.Context, schedule schedule.Schedule, name string, configPath string) error {
@@ -27,18 +27,20 @@ func (m *MTemplate) Init(ctx context.Context, schedule schedule.Schedule, name s
 }
 
 func (m *MTemplate) Run(taskChannel chan *task.Tuple) {
+	if len(m.GetHandlers()) == 0 {
+		return
+	}
+
 	for {
 		select {
 		case t := <-taskChannel:
 			t.Exec()
 		case <-m.ctx.Done():
 			return
-		case <-time.Tick(time.Second * 2):
-			panic("I am bug")
 		}
 	}
 }
 
 func (m *MTemplate) GetHandlers() map[data.Command]task.Handler {
-	return map[data.Command]task.Handler{}
+	return m.handlers
 }
