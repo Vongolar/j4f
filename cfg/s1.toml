@@ -1,4 +1,0 @@
-name = "s1"
-
-[module]
-    t1 = "template.toml"

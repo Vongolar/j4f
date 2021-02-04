@@ -1,6 +1,0 @@
-name = "s3"
-
-[module]
-    t1 = "template.toml"
-    t2 = "template.toml"
-    t3 = "template.toml"

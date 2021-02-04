@@ -1,0 +1,6 @@
+name = "server3"
+
+[[module]]
+  name = "HTTP3"
+  config = "http3.toml"
+  buffer = 15

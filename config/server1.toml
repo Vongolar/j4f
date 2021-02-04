@@ -1,0 +1,6 @@
+name = "server1"
+
+[[module]]
+  name = "HTTP1"
+  config = "http1.toml"
+  buffer = 5

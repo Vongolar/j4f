@@ -1,0 +1,7 @@
+name = "server2"
+
+[[module]]
+  name = "HTTP2"
+  config = "http2.toml"
+  buffer = 10
+

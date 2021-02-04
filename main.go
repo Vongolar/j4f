@@ -1,40 +1,20 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-01-24 21:42:27
+ * @LastEditTime: 2021-02-04 19:01:11
  * @LastEditors: Vongola
  * @Description: file content
- * @FilePath: /JFFun/main.go
- * @Date: 2021-01-15 10:14:10
+ * @FilePath: \JFFun\main.go
+ * @Date: 2021-02-04 11:42:36
  * @描述: 文件描述
  */
 package main
 
 import (
-	"JFFun/jlog"
-	"JFFun/module"
-	"JFFun/module/template"
-	"JFFun/server"
+	"j4f/core/module"
+	"j4f/core/server"
+	"j4f/modules/http"
 )
 
 func main() {
-	jlog.Info("Just For Fun")
-
-	s1 := map[string]module.Module{
-		"t1": new(template.MTemplate),
-	}
-	s2 := map[string]module.Module{
-		"t1": new(template.MTemplate),
-		"t2": new(template.MTemplate),
-	}
-	s3 := map[string]module.Module{
-		"t1": new(template.MTemplate),
-		"t2": new(template.MTemplate),
-		"t3": new(template.MTemplate),
-	}
-
-	server.RunServers(s1, s2, s3)
-
-	jlog.Info("Good Bye")
+	server.MutliRun([]module.Module{new(http.M_Http)}, []module.Module{new(http.M_Http)}, []module.Module{new(http.M_Http)})
 }
-
-//go:generate go generate ./proto
