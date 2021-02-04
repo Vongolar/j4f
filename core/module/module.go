@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 18:16:12
+ * @LastEditTime: 2021-02-04 19:38:19
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\module\module.go
@@ -11,10 +11,11 @@ package module
 
 import (
 	"context"
+	"j4f/core/scheduler"
 	"j4f/core/task"
 )
 
 type Module interface {
 	Init(ctx context.Context, name string, cfgPath string) error
-	Run(c chan *task.TaskHandleTuple)
+	Run(c chan *task.TaskHandleTuple, s scheduler.Scheduler)
 }

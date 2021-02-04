@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 18:26:18
+ * @LastEditTime: 2021-02-04 19:36:53
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\server\config.go
@@ -11,13 +11,12 @@ package server
 
 import (
 	"flag"
-	"j4f/core/schedule"
 	"strings"
 )
 
 type Conifg struct {
-	Name    string                  `toml:"name" yaml:"name" json:"name"`
-	Modules []schedule.ModuleConfig `toml:"module" yaml:"module" json:"module"`
+	Name    string         `toml:"name" yaml:"name" json:"name"`
+	Modules []ModuleConfig `toml:"module" yaml:"module" json:"module"`
 }
 
 type args struct {

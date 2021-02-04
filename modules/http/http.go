@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 18:57:55
+ * @LastEditTime: 2021-02-04 19:38:42
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\modules\http\http.go
@@ -16,15 +16,17 @@ import (
 	"io/ioutil"
 	jconfig "j4f/core/config"
 	"j4f/core/log"
+	"j4f/core/scheduler"
 	"j4f/core/task"
 	"net/http"
 	"strconv"
 )
 
 type M_Http struct {
-	name string
-	ctx  context.Context
-	cfg  config
+	name      string
+	ctx       context.Context
+	cfg       config
+	scheduler scheduler.Scheduler
 }
 
 func (m *M_Http) Init(ctx context.Context, name string, cfgPath string) error {
@@ -38,9 +40,10 @@ func (m *M_Http) Init(ctx context.Context, name string, cfgPath string) error {
 	return nil
 }
 
-func (m *M_Http) Run(c chan *task.TaskHandleTuple) {
-	go m.Listen()
+func (m *M_Http) Run(c chan *task.TaskHandleTuple, s scheduler.Scheduler) {
+	m.scheduler = s
 
+	go m.Listen()
 LOOP:
 	for {
 		select {

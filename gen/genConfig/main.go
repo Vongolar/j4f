@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 18:50:14
+ * @LastEditTime: 2021-02-04 19:38:58
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\gen\genConfig\main.go
@@ -14,7 +14,6 @@ import (
 	"flag"
 	"fmt"
 	"j4f/core/config"
-	"j4f/core/schedule"
 	"j4f/core/server"
 	"os"
 	"path/filepath"
@@ -22,7 +21,7 @@ import (
 
 var serverConfig = server.Conifg{
 	Name: "server1",
-	Modules: []schedule.ModuleConfig{
+	Modules: []server.ModuleConfig{
 		{Name: "HTTP1", Buffer: 5},
 		{Name: "HTTP2", Buffer: 10},
 		{Name: "HTTP3", Buffer: 15},

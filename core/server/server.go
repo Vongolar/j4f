@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 18:41:53
+ * @LastEditTime: 2021-02-04 19:36:35
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\server\server.go
@@ -16,7 +16,6 @@ import (
 	"j4f/core/config"
 	"j4f/core/log"
 	"j4f/core/module"
-	"j4f/core/schedule"
 	"os"
 	"os/signal"
 	"sync"
@@ -36,7 +35,7 @@ func MutliRun(servers ...[]module.Module) {
 		}
 
 		s := &server{
-			schedule: schedule.NewSchedule(ctx, &wg),
+			schedule: newSchedule(ctx, &wg),
 		}
 
 		serverList = append(serverList, s)
@@ -73,7 +72,10 @@ func MutliRun(servers ...[]module.Module) {
 		}
 
 		for j, mc := range s.cfg.Modules {
-			if err := s.schedule.Regist(mc, servers[i][j]); err != nil {
+			if err := s.schedule.Regist(&mod{
+				Cfg: mc,
+				M:   servers[i][j],
+			}); err != nil {
 				log.ErrorTag(`server`, fmt.Sprintf("服务器 %s 注册失败", mc.Name), err)
 				cancel()
 				return
@@ -105,6 +107,6 @@ func MutliRun(servers ...[]module.Module) {
 }
 
 type server struct {
-	schedule *schedule.Scheduler
+	schedule *scheduler
 	cfg      Conifg
 }
