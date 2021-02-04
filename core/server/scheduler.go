@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 19:39:31
+ * @LastEditTime: 2021-02-04 19:47:55
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\server\scheduler.go
@@ -41,6 +41,7 @@ func (s *scheduler) Regist(m *mod) error {
 		}
 
 		m.C = make(chan *task.TaskHandleTuple, m.Cfg.Buffer)
+		s.mods = append(s.mods, m)
 
 		log.InfoTag(`schedule`, fmt.Sprintf("模块 %s 初始化成功", m.Cfg.Name))
 	}()
