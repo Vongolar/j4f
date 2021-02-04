@@ -1,9 +1,9 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 19:47:55
+ * @LastEditTime: 2021-02-04 22:27:03
  * @LastEditors: Vongola
  * @Description: file content
- * @FilePath: \JFFun\core\server\scheduler.go
+ * @FilePath: /JFFun/core/server/scheduler.go
  * @Date: 2021-02-04 14:48:25
  * @描述: 文件描述
  */
@@ -57,7 +57,19 @@ func (s *scheduler) Start() {
 
 func (s *scheduler) Stop() {
 	for _, m := range s.mods {
-		close(m.C)
+		s.wg.Add(1)
+		c := m.C
+		wg := s.wg
+		name := m.Cfg.Name
+		go func() {
+			defer func() {
+				if err := recover(); err != nil {
+					log.WarnTag(`schedule`, fmt.Sprintf("模块 %s 关闭异常，可忽略", name), err)
+				}
+				wg.Done()
+			}()
+			close(c)
+		}()
 	}
 }
 
@@ -69,8 +81,6 @@ func (s *scheduler) goRunMod(m *mod) {
 				log.ErrorTag(`schedule`, fmt.Sprintf("模块 %s 异常关闭", m.Cfg.Name), err)
 				log.WarnTag(`schedule`, fmt.Sprintf("模块 %s 重启", m.Cfg.Name))
 				s.goRunMod(m)
-			} else {
-				log.InfoTag(`schedule`, fmt.Sprintf("模块 %s 关闭", m.Cfg.Name))
 			}
 			s.wg.Done()
 		}()

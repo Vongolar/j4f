@@ -1,9 +1,9 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 19:45:41
+ * @LastEditTime: 2021-02-04 22:26:12
  * @LastEditors: Vongola
  * @Description: file content
- * @FilePath: \JFFun\modules\http\http.go
+ * @FilePath: /JFFun/modules/http/http.go
  * @Date: 2021-02-04 14:53:32
  * @描述: 文件描述
  */
@@ -42,17 +42,9 @@ func (m *M_Http) Init(ctx context.Context, name string, cfgPath string) error {
 
 func (m *M_Http) Run(c chan *task.TaskHandleTuple, s scheduler.Scheduler) {
 	m.scheduler = s
+	close(c)
 
 	go m.Listen()
-LOOP:
-	for {
-		select {
-		case tuple := <-c:
-			if tuple == nil {
-				break LOOP
-			}
-		}
-	}
 }
 
 func (m *M_Http) Listen() {

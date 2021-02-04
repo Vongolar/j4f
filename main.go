@@ -1,9 +1,9 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 19:01:11
+ * @LastEditTime: 2021-02-04 22:01:48
  * @LastEditors: Vongola
  * @Description: file content
- * @FilePath: \JFFun\main.go
+ * @FilePath: /JFFun/main.go
  * @Date: 2021-02-04 11:42:36
  * @描述: 文件描述
  */
@@ -18,3 +18,5 @@ import (
 func main() {
 	server.MutliRun([]module.Module{new(http.M_Http)}, []module.Module{new(http.M_Http)}, []module.Module{new(http.M_Http)})
 }
+
+//go:generate go generate ./gen/
