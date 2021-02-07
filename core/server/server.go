@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 19:46:56
+ * @LastEditTime: 2021-02-05 12:10:43
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\server\server.go
@@ -14,7 +14,6 @@ import (
 	"context"
 	"fmt"
 	"j4f/core/config"
-	"j4f/core/log"
 	"j4f/core/module"
 	"os"
 	"os/signal"
@@ -37,7 +36,7 @@ func MutliRun(servers ...[]module.Module) {
 		s := &server{
 			schedule: newSchedule(ctx, &wg),
 		}
-
+		s.schedule.Lock()
 		serverList = append(serverList, s)
 	}
 
@@ -49,6 +48,7 @@ func MutliRun(servers ...[]module.Module) {
 	args := parseFlag()
 
 	if len(args.configs) != len(serverList) {
+
 		log.InfoTag(`server`, `服务器配置数目和启动服务器数目不匹配`)
 		cancel()
 		return
@@ -87,6 +87,7 @@ func MutliRun(servers ...[]module.Module) {
 	log.InfoTag(`server`, `所有模块初始化成功`)
 
 	for _, s := range serverList {
+		s.schedule.Unlock()
 		s.schedule.Start()
 	}
 

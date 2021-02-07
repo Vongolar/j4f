@@ -1,9 +1,9 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 22:26:12
+ * @LastEditTime: 2021-02-05 12:07:21
  * @LastEditors: Vongola
  * @Description: file content
- * @FilePath: /JFFun/modules/http/http.go
+ * @FilePath: \JFFun\modules\http\http.go
  * @Date: 2021-02-04 14:53:32
  * @描述: 文件描述
  */
@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	jconfig "j4f/core/config"
-	"j4f/core/log"
 	"j4f/core/scheduler"
 	"j4f/core/task"
 	"net/http"
@@ -56,6 +55,6 @@ func (m *M_Http) Listen() {
 	})
 
 	if err := http.ListenAndServe(":"+strconv.Itoa(m.cfg.Port), mux); err != nil {
-		log.ErrorTag(m.name, err)
+		m.scheduler.ErrorTag(m.name, err)
 	}
 }

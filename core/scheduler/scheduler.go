@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 19:38:03
+ * @LastEditTime: 2021-02-05 12:07:05
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\scheduler\scheduler.go
@@ -11,4 +11,10 @@
 package scheduler
 
 type Scheduler interface {
+	Info(a ...interface{})
+	InfoTag(tag string, a ...interface{})
+	Warn(a ...interface{})
+	WarnTag(tag string, a ...interface{})
+	Error(a ...interface{})
+	ErrorTag(tag string, a ...interface{})
 }
