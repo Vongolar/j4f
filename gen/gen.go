@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 18:07:10
+ * @LastEditTime: 2021-02-07 19:30:07
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\gen\gen.go
@@ -12,3 +12,4 @@ package main
 
 //生成proto
 //go:generate protoc --proto_path=../proto/ --go_out=../data command.proto
+//go:generate protoc --proto_path=../proto/ --go_out=../data login/login.proto

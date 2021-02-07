@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-05 12:10:43
+ * @LastEditTime: 2021-02-07 18:00:28
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\server\server.go
@@ -49,24 +49,26 @@ func MutliRun(servers ...[]module.Module) {
 
 	if len(args.configs) != len(serverList) {
 
-		log.InfoTag(`server`, `服务器配置数目和启动服务器数目不匹配`)
+		infoTag(`server`, `服务器配置数目和启动服务器数目不匹配`)
 		cancel()
 		return
 	}
 
 	if args.release && len(serverList) > 1 {
-		log.WarnTag(`server`, `发布模式不建议启动多个server`)
+		warnTag(`server`, `发布模式不建议启动多个server`)
 	}
 
 	for i, s := range serverList {
 		if err := config.DecodeConfigFromFile(args.configs[i], &s.cfg); err != nil {
-			log.ErrorTag(`server`, fmt.Sprintf("服务器配置文件 %s 解析失败", args.configs[i]), err)
+			errTag(`server`, fmt.Sprintf("服务器配置文件 %s 解析失败", args.configs[i]), err)
 			cancel()
 			return
 		}
 
+		s.schedule.name = s.cfg.Name
+
 		if len(s.cfg.Modules) != len(servers[i]) {
-			log.InfoTag(`server`, `服务器模块配置数目和启动服务模块数目不匹配`)
+			s.schedule.ErrorTag(`server`, `服务器模块配置数目和启动服务模块数目不匹配`)
 			cancel()
 			return
 		}
@@ -76,7 +78,7 @@ func MutliRun(servers ...[]module.Module) {
 				Cfg: mc,
 				M:   servers[i][j],
 			}); err != nil {
-				log.ErrorTag(`server`, fmt.Sprintf("服务器 %s 注册失败", mc.Name), err)
+				s.schedule.ErrorTag(`server`, fmt.Sprintf("服务器 %s 注册失败", mc.Name), err)
 				cancel()
 				return
 			}
@@ -84,7 +86,10 @@ func MutliRun(servers ...[]module.Module) {
 	}
 
 	wg.Wait()
-	log.InfoTag(`server`, `所有模块初始化成功`)
+
+	for _, s := range serverList {
+		s.schedule.InfoTag(`server`, `所有模块初始化成功`)
+	}
 
 	for _, s := range serverList {
 		s.schedule.Unlock()
@@ -95,7 +100,9 @@ func MutliRun(servers ...[]module.Module) {
 	signal.Notify(csignal, os.Interrupt, os.Kill)
 	<-csignal
 
-	log.InfoTag(`server`, `正在关闭服务器`)
+	for _, s := range serverList {
+		s.schedule.InfoTag(`server`, `正在关闭服务器`)
+	}
 
 	cancel()
 
@@ -104,7 +111,10 @@ func MutliRun(servers ...[]module.Module) {
 	}
 
 	wg.Wait()
-	log.InfoTag(`server`, `服务器关闭`)
+
+	for _, s := range serverList {
+		s.schedule.InfoTag(`server`, `服务器关闭`)
+	}
 }
 
 type server struct {

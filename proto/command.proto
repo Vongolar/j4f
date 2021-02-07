@@ -1,8 +1,9 @@
 syntax = "proto3";
 
 package data;
-option go_package = ".;data";
+option go_package = "data";
 
 enum command {
     ping = 0;
+    login = 1;
 }

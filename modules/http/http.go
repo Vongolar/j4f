@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-05 12:07:21
+ * @LastEditTime: 2021-02-07 18:58:53
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\modules\http\http.go
@@ -24,8 +24,8 @@ import (
 type M_Http struct {
 	name      string
 	ctx       context.Context
-	cfg       config
 	scheduler scheduler.Scheduler
+	cfg       config
 }
 
 func (m *M_Http) Init(ctx context.Context, name string, cfgPath string) error {
@@ -54,6 +54,7 @@ func (m *M_Http) Listen() {
 		w.WriteHeader(http.StatusOK)
 	})
 
+	m.scheduler.InfoTag(m.name, `HTTP Listen Port:`, m.cfg.Port)
 	if err := http.ListenAndServe(":"+strconv.Itoa(m.cfg.Port), mux); err != nil {
 		m.scheduler.ErrorTag(m.name, err)
 	}

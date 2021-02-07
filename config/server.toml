@@ -1,0 +1,16 @@
+name = "server1"
+
+[[module]]
+  name = "HTTP1"
+  config = ""
+  buffer = 5
+
+[[module]]
+  name = "HTTP2"
+  config = ""
+  buffer = 10
+
+[[module]]
+  name = "HTTP3"
+  config = ""
+  buffer = 15

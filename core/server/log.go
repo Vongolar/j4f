@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-05 12:09:33
+ * @LastEditTime: 2021-02-07 18:20:18
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\server\log.go
@@ -36,19 +36,20 @@ func errTag(tag string, a ...interface{}) {
 }
 
 func (s *scheduler) Info(a ...interface{}) {
+	info(append([]interface{}{fmt.Sprintf("[%s]", s.name)}, a...)...)
 }
 func (s *scheduler) InfoTag(tag string, a ...interface{}) {
-
+	info(append([]interface{}{fmt.Sprintf("[%s]", s.name), fmt.Sprintf("[%s]", tag)}, a...)...)
 }
 func (s *scheduler) Warn(a ...interface{}) {
-
+	warn(append([]interface{}{fmt.Sprintf("[%s]", s.name)}, a...)...)
 }
 func (s *scheduler) WarnTag(tag string, a ...interface{}) {
-
+	warn(append([]interface{}{fmt.Sprintf("[%s]", s.name), fmt.Sprintf("[%s]", tag)}, a...)...)
 }
 func (s *scheduler) Error(a ...interface{}) {
-
+	err(append([]interface{}{fmt.Sprintf("[%s]", s.name)}, a...)...)
 }
 func (s *scheduler) ErrorTag(tag string, a ...interface{}) {
-
+	err(append([]interface{}{fmt.Sprintf("[%s]", s.name), fmt.Sprintf("[%s]", tag)}, a...)...)
 }
