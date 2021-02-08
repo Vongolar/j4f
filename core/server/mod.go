@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 19:35:35
+ * @LastEditTime: 2021-02-08 18:15:41
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\server\mod.go
@@ -13,12 +13,14 @@ package server
 import (
 	"j4f/core/module"
 	"j4f/core/task"
+	"j4f/data"
 )
 
 type mod struct {
-	M   module.Module
-	C   chan *task.TaskHandleTuple
-	Cfg ModuleConfig
+	M        module.Module
+	C        chan *task.TaskHandleTuple
+	Cfg      ModuleConfig
+	handlers map[data.Command]task.Handler
 }
 
 type ModuleConfig struct {

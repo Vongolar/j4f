@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-07 18:01:50
+ * @LastEditTime: 2021-02-08 18:16:56
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\server\scheduler.go
@@ -13,21 +13,30 @@ import (
 	"context"
 	"fmt"
 	"j4f/core/task"
+	"j4f/data"
 	"sync"
 )
 
 type scheduler struct {
 	name string
 	sync.RWMutex
-	ctx  context.Context
-	wg   *sync.WaitGroup
-	mods []*mod
+	ctx      context.Context
+	wg       *sync.WaitGroup
+	mods     []*mod
+	handlers map[data.Command][]*handler
+}
+
+type handler struct {
+	m       *mod
+	cmd     data.Command
+	handler task.Handler
 }
 
 func newSchedule(ctx context.Context, wg *sync.WaitGroup) *scheduler {
 	s := &scheduler{
-		ctx: ctx,
-		wg:  wg,
+		ctx:      ctx,
+		wg:       wg,
+		handlers: make(map[data.Command][]*handler),
 	}
 	return s
 }
@@ -42,7 +51,14 @@ func (s *scheduler) Regist(m *mod) error {
 			panic(err)
 		}
 
-		m.C = make(chan *task.TaskHandleTuple, m.Cfg.Buffer)
+		m.handlers = m.M.GetHandlers()
+		for cmd, h := range m.handlers {
+			s.handlers[cmd] = append(s.handlers[cmd], &handler{m: m, cmd: cmd, handler: h})
+		}
+
+		if len(m.handlers) > 0 {
+			m.C = make(chan *task.TaskHandleTuple, m.Cfg.Buffer)
+		}
 		s.mods = append(s.mods, m)
 
 		s.InfoTag(`schedule`, fmt.Sprintf("模块 %s 初始化成功", m.Cfg.Name))

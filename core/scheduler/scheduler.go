@@ -1,6 +1,6 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-05 12:07:05
+ * @LastEditTime: 2021-02-08 15:31:45
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\scheduler\scheduler.go
@@ -10,6 +10,8 @@
 
 package scheduler
 
+import "j4f/core/task"
+
 type Scheduler interface {
 	Info(a ...interface{})
 	InfoTag(tag string, a ...interface{})
@@ -17,4 +19,7 @@ type Scheduler interface {
 	WarnTag(tag string, a ...interface{})
 	Error(a ...interface{})
 	ErrorTag(tag string, a ...interface{})
+
+	Exec(task *task.Task)
+	ExecMutli(task *task.Task, mutli int)
 }

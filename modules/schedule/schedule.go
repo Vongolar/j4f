@@ -1,14 +1,14 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-07 19:01:56
+ * @LastEditTime: 2021-02-08 17:07:06
  * @LastEditors: Vongola
  * @Description: file content
- * @FilePath: \JFFun\modules\login\login.go
- * @Date: 2021-02-07 18:54:49
+ * @FilePath: \JFFun\modules\schedule\schedule.go
+ * @Date: 2021-02-08 17:06:32
  * @描述: 文件描述
  */
 
-package login
+package schedule
 
 import (
 	"context"
@@ -16,20 +16,20 @@ import (
 	"j4f/core/task"
 )
 
-type M_Login struct {
+type M_Schedule struct {
 	name      string
 	ctx       context.Context
 	scheduler scheduler.Scheduler
 }
 
-func (m *M_Login) Init(ctx context.Context, name string, cfgPath string) error {
+func (m *M_Schedule) Init(ctx context.Context, name string, cfgPath string) error {
 	m.name = name
 	m.ctx = ctx
 
 	return nil
 }
 
-func (m *M_Login) Run(c chan *task.TaskHandleTuple, s scheduler.Scheduler) {
+func (m *M_Schedule) Run(c chan *task.TaskHandleTuple, s scheduler.Scheduler) {
 	m.scheduler = s
 
 LOOP:
@@ -39,6 +39,7 @@ LOOP:
 			if t == nil {
 				break LOOP
 			}
+			t.Exec()
 		}
 	}
 }

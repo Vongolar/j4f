@@ -1,7 +1,11 @@
 name = "server2"
 
 [[module]]
-  name = "HTTP2"
+  name = "Schedule"
+  buffer = 10
+
+[[module]]
+  name = "HTTP"
   config = "http2.toml"
   buffer = 10
 
