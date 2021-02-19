@@ -1,76 +1,83 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-04 17:17:00
+ * @LastEditTime: 2021-02-19 15:33:29
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\config\config.go
- * @Date: 2021-02-04 16:48:14
+ * @Date: 2021-02-19 15:07:16
  * @描述: 文件描述
  */
 package config
 
 import (
-	"errors"
+	"fmt"
 	"io"
+	"j4f/core/json"
+	"j4f/core/toml"
+	"j4f/core/yaml"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"j4f/core/toml"
 )
 
-var (
-	ErrNoSupportFormat = errors.New("不支持序列化格式")
-	ErrFindConfigFile  = errors.New("找不到配置文件")
-)
-
-func DecodeConfigFromFile(path string, out interface{}) error {
-	if filepath.IsAbs(path) {
-		f, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
-		if err != nil {
-			return err
-		}
-		return decodeConfigFromFile(f, out)
-	}
-
-	//猜测路径
-	paths := []string{path, filepath.Join("./cfg", path), filepath.Join("./config", path)}
-	for _, path := range paths {
-		f, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
-
-		if os.IsNotExist(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return decodeConfigFromFile(f, out)
-	}
-
-	return ErrFindConfigFile
+var decoders = []decoder{
+	{toml.GetExt(), toml.Decode},
+	{yaml.GetExt(), yaml.Decode},
+	{json.GetExt(), json.Decode},
 }
 
-func decodeConfigFromFile(f *os.File, out interface{}) error {
-	defer f.Close()
-	return Decode(filepath.Ext(f.Name()), f, out)
+func ParseFile(file string, out interface{}) error {
+	f, err := os.OpenFile(file, os.O_RDONLY, os.ModePerm)
+	if err == nil {
+		return parseFile(f, out)
+	}
+
+	if filepath.IsAbs(file) {
+		return err
+	}
+
+	file = filepath.Join(`config`, file)
+	f, err = os.OpenFile(file, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return parseFile(f, out)
 }
 
-func Decode(ext string, r io.Reader, out interface{}) error {
-	switch strings.TrimLeft(ext, ".") {
-	case "toml":
-		return toml.Decode(r, out)
-	default:
-		return ErrNoSupportFormat
-	}
+func parseFile(file *os.File, out interface{}) error {
+	return encode(file, filepath.Ext(file.Name()), out)
 }
 
-func Encode(ext string, w io.Writer, v interface{}) error {
-	switch strings.TrimLeft(ext, ".") {
-	case "toml":
-		return toml.Encode(w, v)
-	default:
-		return ErrNoSupportFormat
+type decodeHandler func(r io.Reader, out interface{}) error
+type decoder struct {
+	exts       []string
+	decodeFunc decodeHandler
+}
+
+func encode(r io.Reader, ext string, out interface{}) error {
+	h := getEncoder(ext)
+	if h == nil {
+		return fmt.Errorf("no support encode config with %s extension.", ext)
 	}
+	return h(r, out)
+}
+
+func getEncoder(ext string) decodeHandler {
+	for _, e := range decoders {
+		if fitExt(ext, e.exts) {
+			return e.decodeFunc
+		}
+	}
+	return nil
+}
+
+func fitExt(ext string, fits []string) bool {
+	ext = strings.TrimLeft(ext, ".")
+
+	for _, fit := range fits {
+		if fit == ext {
+			return true
+		}
+	}
+	return false
 }

@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package data;
-option go_package = "data";
-
-enum error {
-    ok = 0;
-    noSupportCommand = 1;
-}

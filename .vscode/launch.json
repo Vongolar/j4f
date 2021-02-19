@@ -11,7 +11,7 @@
             "mode": "auto",
             "program": "${workspaceRoot}/main.go",
             "env": {},
-            "args": ["-r=false","-c","server1.toml;server2.toml;server3.toml"]
+            "args": ["-r=false","-c","server.toml;server.toml;"]
         }
     ]
 }

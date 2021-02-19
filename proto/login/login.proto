@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package login;
-option go_package = "login";
-
-message loginReq {
-    string author = 1;
-    string password = 2;
-}

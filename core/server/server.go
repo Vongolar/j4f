@@ -1,123 +1,99 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-02-07 18:00:28
+ * @LastEditTime: 2021-02-19 16:58:09
  * @LastEditors: Vongola
  * @Description: file content
  * @FilePath: \JFFun\core\server\server.go
- * @Date: 2021-02-04 11:30:35
+ * @Date: 2021-02-19 11:56:00
  * @描述: 文件描述
  */
 
 package server
 
 import (
-	"context"
 	"fmt"
-	"j4f/core/config"
+	jconfig "j4f/core/config"
 	"j4f/core/module"
 	"os"
 	"os/signal"
 	"sync"
 )
 
-func Run(modules ...module.Module) {
-	MutliRun(modules)
+const (
+	exitCode_noServer                 = 1
+	exitCode_serverConfigCountNoMatch = 2
+	exitCode_serverPanic              = 3
+)
+
+func RunServer(mods map[string]module.Module) {
+	RunServers([]map[string]module.Module{mods})
 }
 
-func MutliRun(servers ...[]module.Module) {
-	ctx, cancel := context.WithCancel(context.Background())
-	var wg sync.WaitGroup
-	var serverList []*server
-	for _, mods := range servers {
-		if len(mods) == 0 {
-			continue
-		}
+func RunServers(servers []map[string]module.Module) {
+	fmt.Println(`hello`)
 
-		s := &server{
-			schedule: newSchedule(ctx, &wg),
-		}
-		s.schedule.Lock()
-		serverList = append(serverList, s)
+	startupPar = parseFlag()
+
+	if len(startupPar.configFiles) != len(servers) {
+		//TODO:配置数目不一致
+		os.Exit(exitCode_serverConfigCountNoMatch)
 	}
 
-	if len(serverList) == 0 {
-		cancel()
-		return
+	if len(servers) == 0 {
+		//TODO:没有配置
+		os.Exit(exitCode_noServer)
 	}
 
-	args := parseFlag()
-
-	if len(args.configs) != len(serverList) {
-
-		infoTag(`server`, `服务器配置数目和启动服务器数目不匹配`)
-		cancel()
-		return
-	}
-
-	if args.release && len(serverList) > 1 {
-		warnTag(`server`, `发布模式不建议启动多个server`)
-	}
-
-	for i, s := range serverList {
-		if err := config.DecodeConfigFromFile(args.configs[i], &s.cfg); err != nil {
-			errTag(`server`, fmt.Sprintf("服务器配置文件 %s 解析失败", args.configs[i]), err)
-			cancel()
-			return
-		}
-
-		s.schedule.name = s.cfg.Name
-
-		if len(s.cfg.Modules) != len(servers[i]) {
-			s.schedule.ErrorTag(`server`, `服务器模块配置数目和启动服务模块数目不匹配`)
-			cancel()
-			return
-		}
-
-		for j, mc := range s.cfg.Modules {
-			if err := s.schedule.Regist(&mod{
-				Cfg: mc,
-				M:   servers[i][j],
-			}); err != nil {
-				s.schedule.ErrorTag(`server`, fmt.Sprintf("服务器 %s 注册失败", mc.Name), err)
-				cancel()
-				return
+	if len(servers) == 1 {
+		defer func() {
+			if err := recover(); err != nil {
+				//TODO:服务器意外退出
+				fmt.Println(`server panic`, err)
+				os.Exit(exitCode_serverPanic)
 			}
+		}()
+		run(startupPar.configFiles[0], servers[0])
+	} else {
+		var wg sync.WaitGroup
+		hasErr := false
+		for i, cfg := range startupPar.configFiles {
+			sc, mods := cfg, servers[i]
+			wg.Add(1)
+			go func() {
+				defer func() {
+					if err := recover(); err != nil {
+						//TODO:服务器意外退出
+						fmt.Println(`server panic`, err)
+						hasErr = true
+					}
+					wg.Done()
+				}()
+				run(sc, mods)
+			}()
+		}
+		wg.Wait()
+		if hasErr {
+			os.Exit(exitCode_serverPanic)
 		}
 	}
 
-	wg.Wait()
-
-	for _, s := range serverList {
-		s.schedule.InfoTag(`server`, `所有模块初始化成功`)
-	}
-
-	for _, s := range serverList {
-		s.schedule.Unlock()
-		s.schedule.Start()
-	}
-
-	csignal := make(chan os.Signal)
-	signal.Notify(csignal, os.Interrupt, os.Kill)
-	<-csignal
-
-	for _, s := range serverList {
-		s.schedule.InfoTag(`server`, `正在关闭服务器`)
-	}
-
-	cancel()
-
-	for _, s := range serverList {
-		s.schedule.Stop()
-	}
-
-	wg.Wait()
-
-	for _, s := range serverList {
-		s.schedule.InfoTag(`server`, `服务器关闭`)
-	}
+	fmt.Println(`bye`)
 }
+
+var startupPar startupParameter
 
 type server struct {
-	schedule *scheduler
-	cfg      Conifg
+	cfg config
+}
+
+func run(cfg string, mods map[string]module.Module) {
+	s := new(server)
+	err := jconfig.ParseFile(cfg, &s.cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	cSignal := make(chan os.Signal)
+	signal.Notify(cSignal, os.Interrupt, os.Kill)
+	<-cSignal
 }
