@@ -5,6 +5,37 @@
  * @Description: file content
  * @FilePath: \JFFun\core\log\log.go
  * @Date: 2021-02-19 15:49:51
- * @描述: 文件描述
+ * @描述: 1.在shedule和log模块运行之前，打印在标准输出和缓存中 2.运行之后，输出到log模块
  */
+
 package log
+
+import (
+	"fmt"
+	"log"
+	"strings"
+	"unsafe"
+)
+
+type buffLogWriter struct {
+	builder strings.Builder
+}
+
+func (w *buffLogWriter) Write(p []byte) (n int, err error) {
+	fmt.Print(*(*string)(unsafe.Pointer(&p)))
+	return w.builder.Write(p)
+}
+
+var blw *buffLogWriter
+
+func SetBuffLog() {
+	blw = new(buffLogWriter)
+	log.SetOutput(blw)
+}
+
+func EndBufLog() {
+	if blw == nil {
+		return
+	}
+	fmt.Println(blw.builder.String())
+}
