@@ -11,10 +11,12 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	jconfig "j4f/core/config"
-	jlog "j4f/core/log"
 	"j4f/core/module"
+	"j4f/modules/core/mlog"
+	"j4f/modules/core/mschedule"
 	"log"
 	"os"
 	"os/signal"
@@ -28,11 +30,18 @@ const (
 )
 
 func RunServer(mods map[string]module.Module) {
-	RunServers([]map[string]module.Module{mods})
+	startupPar = parseFlag()
+
+	l, sc := new(mlog.M_Log), new(mschedule.M_Schedule)
+	mods[""].Init(context.Background(), "dsf", "sdf")
+	mods["fdsf"].Run()
+
+	mods["fds"] = l
+	mods["sdf"] = sc
 }
 
 func RunServers(servers []map[string]module.Module) {
-	jlog.SetBuffLog()
+	// jlog.SetBuffLog()
 
 	log.Println(`Just For Fun`)
 

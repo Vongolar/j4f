@@ -9,5 +9,9 @@
  */
 package module
 
+import "context"
+
 type Module interface {
+	Init(ctx context.Context, name string, cfgPath string)
+	Run()
 }

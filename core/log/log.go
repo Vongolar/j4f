@@ -17,25 +17,24 @@ import (
 	"unsafe"
 )
 
+type Logger interface {
+	Log()
+}
+
 type buffLogWriter struct {
 	builder strings.Builder
 }
+
+var blw *buffLogWriter
 
 func (w *buffLogWriter) Write(p []byte) (n int, err error) {
 	fmt.Print(*(*string)(unsafe.Pointer(&p)))
 	return w.builder.Write(p)
 }
 
-var blw *buffLogWriter
-
-func SetBuffLog() {
-	blw = new(buffLogWriter)
-	log.SetOutput(blw)
-}
-
-func EndBufLog() {
+func Log(a ...interface{}) {
 	if blw == nil {
-		return
+		blw = new(buffLogWriter)
+		log.SetOutput(blw)
 	}
-	fmt.Println(blw.builder.String())
 }

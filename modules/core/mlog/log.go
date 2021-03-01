@@ -10,5 +10,24 @@
 
 package mlog
 
+import (
+	"context"
+	"j4f/core/log"
+	"j4f/core/scheduler"
+)
+
 type M_Log struct {
+}
+
+func (m *M_Log) Init(ctx context.Context, name string, cfgPath string) {
+
+}
+
+func (m *M_Log) Run() {
+
+}
+
+func (m *M_Log) Log() {
+	log.Log()
+	scheduler.Exec()
 }
