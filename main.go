@@ -10,18 +10,20 @@
 package main
 
 import (
-	"j4f/core/module"
-	"j4f/core/server"
+	"fmt"
 )
 
 func main() {
+	fmt.Println(`Just For Fun`)
 
-	server1 := map[string]module.Module{}
-	server2 := map[string]module.Module{}
+	fmt.Println(`BYE`)
 
-	server.RunServers([]map[string]module.Module{server1, server2})
+	// server1 := map[string]module.Module{}
+	// server2 := map[string]module.Module{}
 
-	// server.RunServer(server1)
+	// server.RunServers([]map[string]module.Module{server1, server2})
+
+	// // server.RunServer(server1)
 }
 
 //go:generate go generate ./cmd/

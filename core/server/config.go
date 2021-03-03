@@ -1,15 +1,13 @@
-/*
- * @Author: Vongola
- * @LastEditTime: 2021-02-19 15:45:26
- * @LastEditors: Vongola
- * @Description: file content
- * @FilePath: \JFFun\core\server\config.go
- * @Date: 2021-02-19 15:42:41
- * @描述: 文件描述
- */
-
 package server
 
+import "j4f/core/loglevel"
+
+var defaultConfig = config{
+	Release:     true,
+	MinLogLevel: loglevel.INFO,
+}
+
 type config struct {
-	Name string `json:"name" toml:"name" yaml:"name"`
+	Release     bool           `toml:"release" json:"release" yaml:"release"`
+	MinLogLevel loglevel.Level `toml:"minLogLevel" json:"minLogLevel" yaml:"minLogLevel"`
 }

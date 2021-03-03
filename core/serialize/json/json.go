@@ -1,12 +1,3 @@
-/*
- * @Author: Vongola
- * @LastEditTime: 2021-02-19 14:48:33
- * @LastEditors: Vongola
- * @Description: file content
- * @FilePath: \JFFun\core\json\json.go
- * @Date: 2021-02-19 14:46:41
- * @描述: 文件描述
- */
 package json
 
 import (

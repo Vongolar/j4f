@@ -1,12 +1,3 @@
-/*
- * @Author: Vongola
- * @LastEditTime: 2021-02-19 15:05:15
- * @LastEditors: Vongola
- * @Description: file content
- * @FilePath: \JFFun\core\protobuf\protobuf.go
- * @Date: 2021-02-19 14:55:19
- * @描述: 文件描述
- */
 package protobuf
 
 import (

@@ -1,13 +1,3 @@
-/*
- * @Author: Vongola
- * @LastEditTime: 2021-02-19 14:45:11
- * @LastEditors: Vongola
- * @Description: file content
- * @FilePath: \JFFun\core\toml\toml.go
- * @Date: 2021-02-19 14:40:07
- * @描述: 文件描述
- */
-
 package toml
 
 import (

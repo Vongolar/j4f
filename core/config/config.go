@@ -1,12 +1,3 @@
-/*
- * @Author: Vongola
- * @LastEditTime: 2021-02-19 15:33:29
- * @LastEditors: Vongola
- * @Description: file content
- * @FilePath: \JFFun\core\config\config.go
- * @Date: 2021-02-19 15:07:16
- * @描述: 文件描述
- */
 package config
 
 import (
