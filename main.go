@@ -11,10 +11,16 @@ package main
 
 import (
 	"fmt"
+	"j4f/core/module"
+	mscheduler "j4f/core/modules/scheduler"
+	"j4f/core/server"
+	"j4f/modules/mlog"
 )
 
 func main() {
 	fmt.Println(`Just For Fun`)
+
+	run(new(mlog.M_Log))
 
 	fmt.Println(`BYE`)
 
@@ -26,4 +32,8 @@ func main() {
 	// // server.RunServer(server1)
 }
 
-//go:generate go generate ./cmd/
+func run(mods ...module.Module) {
+	server.Run(new(mscheduler.M_Scheduler), mods...)
+}
+
+//go:generate go generate ./proto/

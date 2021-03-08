@@ -1,0 +1,9 @@
+release = false
+
+[[modules]]
+    name = "scheduler"
+    config = "scheduler.toml"
+
+[[modules]]
+    name = "log"
+    config = "log.toml"

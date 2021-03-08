@@ -9,9 +9,14 @@
  */
 package module
 
-import "context"
+import (
+	"context"
+	"j4f/core/task"
+	"j4f/data/command"
+)
 
 type Module interface {
-	Init(ctx context.Context, name string, cfgPath string)
+	Init(ctx context.Context, name string, cfgPath string) error
 	Run()
+	GetHandlers() map[command.Command]task.TaskHandler
 }

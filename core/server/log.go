@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"j4f/core/loglevel"
 )
 
@@ -32,4 +33,6 @@ func log(level loglevel.Level, tag string, msg ...interface{}) {
 	if level < defaultConfig.MinLogLevel {
 		return
 	}
+
+	fmt.Println(append([]interface{}{loglevel.GetLevelTag(level), tag}, msg...)...)
 }

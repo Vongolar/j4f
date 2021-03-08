@@ -3,9 +3,9 @@ package config
 import (
 	"fmt"
 	"io"
-	"j4f/core/json"
-	"j4f/core/toml"
-	"j4f/core/yaml"
+	"j4f/core/serialize/json"
+	"j4f/core/serialize/toml"
+	"j4f/core/serialize/yaml"
 	"os"
 	"path/filepath"
 	"strings"

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package command;
+option go_package = "data/command;command";
+
+enum command {
+    registModule = 0;
+    runModules = 1;
+}
