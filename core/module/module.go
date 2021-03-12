@@ -17,6 +17,6 @@ import (
 
 type Module interface {
 	Init(ctx context.Context, name string, cfgPath string) error
-	Run()
+	Run(chan *task.Task)
 	GetHandlers() map[command.Command]task.TaskHandler
 }

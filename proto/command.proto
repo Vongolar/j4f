@@ -4,6 +4,9 @@ package command;
 option go_package = "data/command;command";
 
 enum command {
-    registModule = 0;
-    runModules = 1;
+    registModule = 0; //注册模块
+    runModules = 1;//运行所有模块
+    handle = 2; //自动分配一个本地模块执行
+
+    log = 50; //输出日志
 }

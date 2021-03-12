@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package log;
+option go_package = "data/common/log;log";
+
+message item {
+    int32 level = 1;
+    string tag = 2;
+    repeated string msg = 3;
+    int64 ts = 4;
+}

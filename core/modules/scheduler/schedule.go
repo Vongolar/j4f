@@ -2,14 +2,14 @@ package mscheduler
 
 import (
 	"fmt"
-	"j4f/core/module"
+	"j4f/core/scheduler"
 	"j4f/core/task"
 	"j4f/data/command"
 )
 
 var ErrRejectTask = fmt.Errorf(`服务器开始关闭，拒绝服务`)
 
-func (m *M_Scheduler) RegistModule(mod module.Module) error {
+func (m *M_Scheduler) RegistModule(mod scheduler.ModuleWithCfg) error {
 	if m.isClose() {
 		return ErrRejectTask
 	}

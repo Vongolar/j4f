@@ -5,17 +5,17 @@ import (
 	"flag"
 	jconfig "j4f/core/config"
 	"j4f/core/module"
-	"j4f/core/schduler"
+	"j4f/core/scheduler"
 	"os"
 	"os/signal"
 	"sync"
 )
 
 var (
-	scheduleModuler schduler.ISchedule
+	scheduleModuler scheduler.ISchedule
 )
 
-func Run(scheduleMod schduler.ISchedule, mods ...module.Module) {
+func Run(scheduleMod scheduler.ISchedule, mods ...module.Module) {
 	rootCfgPath := flag.String(`c`, `./config/root.toml`, `配置`)
 	flag.Parse()
 	err := jconfig.ParseFile(*rootCfgPath, &defaultConfig)
@@ -47,12 +47,10 @@ func Run(scheduleMod schduler.ISchedule, mods ...module.Module) {
 			}
 			wg.Done()
 		}()
-		scheduleMod.Run()
+		scheduleMod.Run(nil)
 	}()
 
-	if len(mods) > 0 {
-		registModules(mods[1:]...)
-	}
+	registModules(mods[0:]...)
 
 	closeSign := make(chan os.Signal)
 	signal.Notify(closeSign, os.Interrupt, os.Kill)
@@ -64,8 +62,12 @@ func Run(scheduleMod schduler.ISchedule, mods ...module.Module) {
 }
 
 func registModules(mods ...module.Module) {
-	for _, mod := range mods {
-		scheduleModuler.RegistModule(mod)
+	for i, mod := range mods {
+		scheduleModuler.RegistModule(scheduler.ModuleWithCfg{
+			Mod:    mod,
+			Name:   defaultConfig.ModuleConfigs[i+1].Name,
+			Config: defaultConfig.ModuleConfigs[i+1].Config,
+		})
 	}
 
 	scheduleModuler.RunModules()

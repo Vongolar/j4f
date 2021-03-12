@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"j4f/core/config"
+	"j4f/core/module"
 	moduleconfig "j4f/core/module/config"
 	"j4f/core/server"
 	"j4f/core/task"
 	"j4f/data/command"
+	"sync"
 	"sync/atomic"
 )
 
@@ -18,6 +20,16 @@ type M_Scheduler struct {
 
 	c         chan *task.Task
 	closeSign int64
+
+	wg      sync.WaitGroup
+	modules []*mod
+}
+
+type mod struct {
+	name string
+	m    module.Module
+	c    chan *task.Task
+	cfg  moduleconfig.ModuleConfig
 }
 
 func (m *M_Scheduler) Init(ctx context.Context, name string, cfgPath string) error {
@@ -34,7 +46,7 @@ func (m *M_Scheduler) Init(ctx context.Context, name string, cfgPath string) err
 	return nil
 }
 
-func (m *M_Scheduler) Run() {
+func (m *M_Scheduler) Run(chan *task.Task) {
 	handlers := m.GetHandlers()
 
 LOOP:
@@ -51,9 +63,15 @@ LOOP:
 				server.ErrTag(m.name, fmt.Sprintf("No find handler for command : %s .", command.Command_name[int32(t.CMD)]))
 				continue
 			}
+			server.InfoTag(m.name, fmt.Sprintf("%s", command.Command_name[int32(t.CMD)]))
 			handler(t)
 		}
 	}
+
+	for _, mod := range m.modules {
+		close(mod.c)
+	}
+	m.wg.Wait()
 }
 
 func (m *M_Scheduler) isClose() bool {
@@ -61,6 +79,8 @@ func (m *M_Scheduler) isClose() bool {
 }
 
 func (m *M_Scheduler) close() {
-	atomic.AddInt64(&m.closeSign, 1)
-	close(m.c)
+	if !m.isClose() {
+		atomic.AddInt64(&m.closeSign, 1)
+		close(m.c)
+	}
 }

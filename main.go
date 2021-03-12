@@ -20,16 +20,10 @@ import (
 func main() {
 	fmt.Println(`Just For Fun`)
 
-	run(new(mlog.M_Log))
+	l := new(mlog.M_Log)
+	run(l)
 
 	fmt.Println(`BYE`)
-
-	// server1 := map[string]module.Module{}
-	// server2 := map[string]module.Module{}
-
-	// server.RunServers([]map[string]module.Module{server1, server2})
-
-	// // server.RunServer(server1)
 }
 
 func run(mods ...module.Module) {

@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package errCode;
+option go_package = "data/errCode;errCode";
+
+enum code {
+    ok = 0;
+    typeNoMatch = 1; //类型不匹配
+    moduleRegistErr = 2; //模块注册失败
+}
