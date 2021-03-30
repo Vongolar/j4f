@@ -29,3 +29,14 @@ func (m *M_Scheduler) RunModules() error {
 	}
 	return nil
 }
+
+func (m *M_Scheduler) Handle(t *task.Task) error {
+	if m.isClose() {
+		return ErrRejectTask
+	}
+	m.c <- &task.Task{
+		CMD:  command.Command_handle,
+		Data: t,
+	}
+	return nil
+}

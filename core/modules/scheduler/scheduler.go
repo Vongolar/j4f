@@ -17,12 +17,15 @@ type M_Scheduler struct {
 	ctx       context.Context
 	name      string
 	commonCfg moduleconfig.ModuleConfig
+	cfg       mconfig
 
 	c         chan *task.Task
 	closeSign int64
 
 	wg      sync.WaitGroup
 	modules []*mod
+
+	handlerMap map[command.Command][]*mod
 }
 
 type mod struct {
@@ -30,6 +33,11 @@ type mod struct {
 	m    module.Module
 	c    chan *task.Task
 	cfg  moduleconfig.ModuleConfig
+
+	handlers map[command.Command]task.TaskHandler
+
+	profileQueue    *fixIntergerQueue
+	errProfileQueue *fixBoolenQueue
 }
 
 func (m *M_Scheduler) Init(ctx context.Context, name string, cfgPath string) error {
@@ -37,12 +45,17 @@ func (m *M_Scheduler) Init(ctx context.Context, name string, cfgPath string) err
 		return err
 	}
 
+	if err := config.ParseFile(cfgPath, &m.cfg); err != nil {
+		return err
+	}
+
 	m.ctx = ctx
 	m.name = name
 
 	m.c = make(chan *task.Task, m.commonCfg.Buffer)
-	atomic.StoreInt64(&m.closeSign, 0)
+	m.handlerMap = make(map[command.Command][]*mod)
 
+	atomic.StoreInt64(&m.closeSign, 0)
 	return nil
 }
 
@@ -63,7 +76,11 @@ LOOP:
 				server.ErrTag(m.name, fmt.Sprintf("No find handler for command : %s .", command.Command_name[int32(t.CMD)]))
 				continue
 			}
-			server.InfoTag(m.name, fmt.Sprintf("%s", command.Command_name[int32(t.CMD)]))
+
+			subTask, middle := t.Data.(*task.Task)
+			if !middle || (middle && subTask.CMD != command.Command_log) {
+				server.InfoTag(m.name, fmt.Sprintf("%s", command.Command_name[int32(t.CMD)]))
+			}
 			handler(t)
 		}
 	}

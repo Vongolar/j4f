@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package log;
+option go_package = "data/log;log";
+
+message logMessage {
+    int32 level = 1;
+    string tag = 2;
+    string msg = 3;
+    int64 timeStampleNanoSec = 4;
+}

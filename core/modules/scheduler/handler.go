@@ -15,6 +15,7 @@ func (m *M_Scheduler) GetHandlers() map[command.Command]task.TaskHandler {
 	return map[command.Command]task.TaskHandler{
 		command.Command_registModule: m.registModule,
 		command.Command_runModules:   m.runModules,
+		command.Command_handle:       m.handle,
 	}
 }
 
@@ -55,7 +56,20 @@ func (m *M_Scheduler) registModule(t *task.Task) {
 	}
 
 	channel := make(chan *task.Task, cfg.Buffer)
-	m.modules = append(m.modules, &mod{name: mc.Name, m: mc.Mod, c: channel, cfg: cfg})
+	newModule := &mod{name: mc.Name, m: mc.Mod, c: channel, cfg: cfg, handlers: mc.Mod.GetHandlers()}
+
+	//注册方法
+	for cmd, _ := range newModule.handlers {
+		m.handlerMap[cmd] = append(m.handlerMap[cmd], newModule)
+	}
+
+	//性能缓存
+	if m.cfg.Profile > 0 {
+		newModule.profileQueue = createFixIntergerQueue(m.cfg.Profile)
+		newModule.errProfileQueue = createFixBooleanQueue(m.cfg.Profile)
+	}
+
+	m.modules = append(m.modules, newModule)
 	server.InfoTag(m.name, fmt.Sprintf("模块 %s 注册完成", mc.Name))
 }
 
@@ -82,4 +96,19 @@ func (m *M_Scheduler) goRunModule(mod *mod) {
 		}()
 		mod.m.Run(mod.c)
 	}()
+}
+
+func (m *M_Scheduler) handle(t *task.Task) {
+	ct := t.Data.(*task.Task)
+	mods, exist := m.handlerMap[ct.CMD]
+	if !exist || len(mods) == 0 {
+		ct.Error(errCode.Code_noFindModuleForTask)
+		return
+	}
+
+	if len(mods) == 1 {
+		mods[0].c <- ct
+		return
+	}
+
 }

@@ -2,24 +2,22 @@ package mlog
 
 import (
 	"context"
+	"j4f/core/server"
 	"j4f/core/task"
 	"j4f/data/command"
 )
 
 type M_Log struct {
+	handlers map[command.Command]task.TaskHandler
 }
 
 func (m *M_Log) Init(ctx context.Context, name string, cfgPath string) error {
 	return nil
 }
 
-var first = true
-
 func (m *M_Log) Run(c chan *task.Task) {
-	if first {
-		first = false
-		panic("log panic")
-	}
+	server.CloseLogBuffer()
+
 LOOP:
 	for {
 		select {
@@ -27,10 +25,7 @@ LOOP:
 			if t == nil {
 				break LOOP
 			}
+			m.handlers[t.CMD](t)
 		}
 	}
-}
-
-func (m *M_Log) GetHandlers() map[command.Command]task.TaskHandler {
-	return map[command.Command]task.TaskHandler{}
 }

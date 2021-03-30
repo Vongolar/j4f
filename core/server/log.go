@@ -1,8 +1,11 @@
 package server
 
 import (
+	"fmt"
 	"j4f/core/loglevel"
-	dlog "j4f/data/common/log"
+	"j4f/core/task"
+	"j4f/data/command"
+	dlog "j4f/data/log"
 	"time"
 )
 
@@ -30,7 +33,7 @@ func ErrTag(tag string, msg ...interface{}) {
 	log(loglevel.ERROR, tag, msg...)
 }
 
-var buffer []*dlog.Item
+var buffer []*dlog.LogMessage
 var useBuffer bool
 
 func log(level loglevel.Level, tag string, msg ...interface{}) {
@@ -38,17 +41,23 @@ func log(level loglevel.Level, tag string, msg ...interface{}) {
 		return
 	}
 
-	if useBuffer {
-		buffer = append(buffer, &dlog.Item{
-			Level: int32(level),
-			Tag:   tag,
-			Msg:   msg,
-			Ts:    time.Now().Unix(),
-		})
+	if len(msg) == 0 {
 		return
 	}
 
-	slog(level, tag, time.Now(), msg...)
+	li := &dlog.LogMessage{
+		Level:              int32(level),
+		Tag:                tag,
+		Msg:                fmt.Sprint(msg...),
+		TimeStampleNanoSec: time.Now().UnixNano(),
+	}
+
+	if useBuffer {
+		buffer = append(buffer, li)
+		return
+	}
+
+	slog(li)
 }
 
 func CloseLogBuffer() {
@@ -56,13 +65,16 @@ func CloseLogBuffer() {
 		useBuffer = false
 
 		for _, item := range buffer {
-			slog(item.Level, item.Tag, item.TS, item.Msg...)
+			slog(item)
 		}
 
 		buffer = nil
 	}
 }
 
-func slog(level loglevel.Level, tag string, time time.Time, msg ...interface{}) {
-
+func slog(li *dlog.LogMessage) {
+	Handle(&task.Task{
+		CMD:  command.Command_log,
+		Data: li,
+	})
 }

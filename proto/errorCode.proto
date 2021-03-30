@@ -7,4 +7,5 @@ enum code {
     ok = 0;
     typeNoMatch = 1; //类型不匹配
     moduleRegistErr = 2; //模块注册失败
+    noFindModuleForTask = 3; //没有找到可执行任务的模块
 }
