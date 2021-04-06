@@ -14,15 +14,17 @@ import (
 	mscheduler "j4f/core/modules/scheduler"
 	"j4f/core/server"
 	mhttp "j4f/modules/gate/http"
+	"j4f/modules/gate/socks5"
 )
 
 func main() {
 	server.Info(`Just For Fun`)
 
 	// l := new(mlog.M_Log)
+	s5 := new(socks5.M_Socks5)
 	h := new(mhttp.M_Http)
 
-	run(h)
+	run(h, s5)
 
 	server.Info(`BYE`)
 }
