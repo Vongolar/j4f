@@ -2,11 +2,9 @@ package mscheduler
 
 import (
 	"context"
-	"fmt"
 	"j4f/core/config"
 	"j4f/core/module"
 	moduleconfig "j4f/core/module/config"
-	"j4f/core/server"
 	"j4f/core/task"
 	"j4f/data/command"
 	"sync"
@@ -73,14 +71,14 @@ LOOP:
 			}
 			handler, exist := handlers[t.CMD]
 			if !exist {
-				server.ErrTag(m.name, fmt.Sprintf("No find handler for command : %s .", command.Command_name[int32(t.CMD)]))
+				//server.ErrTag(m.name, fmt.Sprintf("No find handler for command : %s .", command.Command_name[int32(t.CMD)]))
 				continue
 			}
 
-			subTask, middle := t.Data.(*task.Task)
-			if !middle || (middle && subTask.CMD != command.Command_log) {
-				server.InfoTag(m.name, fmt.Sprintf("%s", command.Command_name[int32(t.CMD)]))
-			}
+			// subTask, middle := t.Data.(*task.Task)
+			// if middle && subTask.CMD > command.Command_innerMax {
+			// 	server.InfoTag(m.name, fmt.Sprintf("%s", command.Command_name[int32(t.CMD)]))
+			// }
 			handler(t)
 		}
 	}

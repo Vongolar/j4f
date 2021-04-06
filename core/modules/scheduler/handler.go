@@ -59,7 +59,7 @@ func (m *M_Scheduler) registModule(t *task.Task) {
 	newModule := &mod{name: mc.Name, m: mc.Mod, c: channel, cfg: cfg, handlers: mc.Mod.GetHandlers()}
 
 	//注册方法
-	for cmd, _ := range newModule.handlers {
+	for cmd := range newModule.handlers {
 		m.handlerMap[cmd] = append(m.handlerMap[cmd], newModule)
 	}
 
@@ -71,6 +71,7 @@ func (m *M_Scheduler) registModule(t *task.Task) {
 
 	m.modules = append(m.modules, newModule)
 	server.InfoTag(m.name, fmt.Sprintf("模块 %s 注册完成", mc.Name))
+	t.Ok()
 }
 
 func (m *M_Scheduler) runModules(t *task.Task) {

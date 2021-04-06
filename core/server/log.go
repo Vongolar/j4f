@@ -34,7 +34,7 @@ func ErrTag(tag string, msg ...interface{}) {
 }
 
 var buffer []*dlog.LogMessage
-var useBuffer bool
+var useBuffer bool = true
 
 func log(level loglevel.Level, tag string, msg ...interface{}) {
 	if level < defaultConfig.MinLogLevel {
@@ -52,6 +52,10 @@ func log(level loglevel.Level, tag string, msg ...interface{}) {
 		TimeStampleNanoSec: time.Now().UnixNano(),
 	}
 
+	if defaultConfig.Log {
+		fmt.Print(format(li))
+	}
+
 	if useBuffer {
 		buffer = append(buffer, li)
 		return
@@ -60,7 +64,7 @@ func log(level loglevel.Level, tag string, msg ...interface{}) {
 	slog(li)
 }
 
-func CloseLogBuffer() {
+func closeLogBuffer() {
 	if useBuffer {
 		useBuffer = false
 
@@ -77,4 +81,8 @@ func slog(li *dlog.LogMessage) {
 		CMD:  command.Command_log,
 		Data: li,
 	})
+}
+
+func format(l *dlog.LogMessage) string {
+	return fmt.Sprintln(l)
 }

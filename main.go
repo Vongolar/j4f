@@ -10,20 +10,21 @@
 package main
 
 import (
-	"fmt"
 	"j4f/core/module"
 	mscheduler "j4f/core/modules/scheduler"
 	"j4f/core/server"
-	"j4f/modules/mlog"
+	mhttp "j4f/modules/gate/http"
 )
 
 func main() {
-	fmt.Println(`Just For Fun`)
+	server.Info(`Just For Fun`)
 
-	l := new(mlog.M_Log)
-	run(l)
+	// l := new(mlog.M_Log)
+	h := new(mhttp.M_Http)
 
-	fmt.Println(`BYE`)
+	run(h)
+
+	server.Info(`BYE`)
 }
 
 func run(mods ...module.Module) {

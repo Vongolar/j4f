@@ -1,7 +1,6 @@
 package mlog
 
 import (
-	"fmt"
 	"j4f/core/task"
 	"j4f/data/command"
 )
@@ -16,5 +15,5 @@ func (m *M_Log) GetHandlers() map[command.Command]task.TaskHandler {
 }
 
 func (m *M_Log) log(t *task.Task) {
-	fmt.Println(t.Data)
+
 }

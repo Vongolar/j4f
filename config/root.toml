@@ -1,9 +1,19 @@
+log = true
+minLogLevel = 0
 release = false
 
 [[modules]]
-    name = "scheduler"
-    config = "scheduler.toml"
+config = "scheduler.toml"
+name = "scheduler"
 
 [[modules]]
-    name = "log"
-    config = "log.toml"
+config = "http.toml"
+name = "http"
+
+[[modules]]
+config = "log.toml"
+name = "log"
+
+[[modules]]
+config = "socks5.toml"
+name = "socks5"

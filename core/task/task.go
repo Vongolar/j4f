@@ -1,19 +1,23 @@
 package task
 
 import (
+	"j4f/core/request"
 	"j4f/data/command"
 	"j4f/data/errCode"
 )
 
 type Task struct {
-	CMD  command.Command
-	Data interface{}
+	CMD     command.Command
+	Data    interface{}
+	Request request.Request
 }
 
 type TaskHandler func(*Task)
 
 func (t *Task) Reply(code errCode.Code, ext interface{}) {
-
+	if t.Request != nil {
+		t.Request.Reply(code, ext)
+	}
 }
 
 func (t *Task) Ok() {

@@ -50,7 +50,10 @@ func Run(scheduleMod scheduler.ISchedule, mods ...module.Module) {
 		scheduleMod.Run(nil)
 	}()
 
-	registModules(mods[0:]...)
+	if err := registModules(mods[0:]...); err != nil {
+		cancel()
+		return
+	}
 
 	closeSign := make(chan os.Signal)
 	signal.Notify(closeSign, os.Interrupt, os.Kill)
@@ -61,14 +64,21 @@ func Run(scheduleMod scheduler.ISchedule, mods ...module.Module) {
 	wg.Wait()
 }
 
-func registModules(mods ...module.Module) {
+func registModules(mods ...module.Module) error {
 	for i, mod := range mods {
-		scheduleModuler.RegistModule(scheduler.ModuleWithCfg{
+		err := scheduleModuler.RegistModule(scheduler.ModuleWithCfg{
 			Mod:    mod,
 			Name:   defaultConfig.ModuleConfigs[i+1].Name,
 			Config: defaultConfig.ModuleConfigs[i+1].Config,
 		})
+
+		if err != nil {
+			return err
+		}
 	}
 
 	scheduleModuler.RunModules()
+
+	closeLogBuffer()
+	return nil
 }

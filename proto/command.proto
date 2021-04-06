@@ -5,8 +5,11 @@ option go_package = "data/command;command";
 
 enum command {
     registModule = 0; //注册模块
-    runModules = 1;//运行所有模块
-    handle = 2; //自动分配一个本地模块执行
+    log = 1; //输出日志
+    runModules = 2;//运行所有模块
+    handle = 3; //自动分配一个本地模块执行
 
-    log = 50; //输出日志
+    innerMax = 10000; //内部命令最大值
+    signup = 10001; //注册
+    login = 10002; //登录
 }
