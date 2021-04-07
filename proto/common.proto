@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "command.proto";
+
+package common;
+option go_package = "j4f/data/common;common";
+
+message pack {
+    command.command command = 1;
+    bytes data = 2;
+}

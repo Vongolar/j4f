@@ -13,18 +13,18 @@ import (
 	"j4f/core/module"
 	mscheduler "j4f/core/modules/scheduler"
 	"j4f/core/server"
-	mhttp "j4f/modules/gate/http"
-	"j4f/modules/gate/socks5"
+	"j4f/modules/gate/console"
 )
 
 func main() {
 	server.Info(`Just For Fun`)
 
 	// l := new(mlog.M_Log)
-	s5 := new(socks5.M_Socks5)
-	h := new(mhttp.M_Http)
+	// s5 := new(socks5.M_Socks5)
+	// h := new(mhttp.M_Http)
+	sin := new(console.M_Console)
 
-	run(h, s5)
+	run(sin)
 
 	server.Info(`BYE`)
 }

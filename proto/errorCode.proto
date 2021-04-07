@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package errCode;
-option go_package = "data/errCode;errCode";
+option go_package = "j4f/data/errCode;errCode";
 
 enum code {
     ok = 0;

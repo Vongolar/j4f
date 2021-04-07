@@ -1,13 +1,15 @@
 syntax = "proto3";
 
 package command;
-option go_package = "data/command;command";
+option go_package = "j4f/data/command;command";
 
 enum command {
-    registModule = 0; //注册模块
-    log = 1; //输出日志
-    runModules = 2;//运行所有模块
-    handle = 3; //自动分配一个本地模块执行
+    invaild = 0; //无效
+
+    registModule = 1; //注册模块
+    log = 2; //输出日志
+    runModules = 3;//运行所有模块
+    handle = 4; //自动分配一个本地模块执行
 
     innerMax = 10000; //内部命令最大值
     signup = 10001; //注册

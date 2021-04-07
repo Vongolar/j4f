@@ -16,3 +16,11 @@ func Encode(w io.Writer, v interface{}) error {
 func Decode(r io.Reader, out interface{}) error {
 	return json.NewDecoder(r).Decode(out)
 }
+
+func Marshal(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
+}
+
+func Unmarshal(msg []byte, out interface{}) error {
+	return json.Unmarshal(msg, out)
+}

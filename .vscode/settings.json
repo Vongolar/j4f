@@ -19,4 +19,9 @@
         "--disable=all",
         "--enable=errcheck"
     ],
+    "protoc": {
+        "options": [
+            "--proto_path=proto"
+        ]
+    }
 }

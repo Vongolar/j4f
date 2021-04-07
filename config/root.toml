@@ -7,6 +7,10 @@ config = "scheduler.toml"
 name = "scheduler"
 
 [[modules]]
+config = "console.toml"
+name = "console"
+
+[[modules]]
 config = "http.toml"
 name = "http"
 
