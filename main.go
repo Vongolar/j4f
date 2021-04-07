@@ -1,9 +1,9 @@
 /*
  * @Author: Vongola
- * @LastEditTime: 2021-03-30 16:58:21
+ * @LastEditTime: 2021-04-07 18:28:29
  * @LastEditors: Vongola
  * @Description: file content
- * @FilePath: /JFFun/main.go
+ * @FilePath: \j4f\main.go
  * @Date: 2021-02-04 11:42:36
  * @描述: 文件描述
  */
@@ -11,20 +11,23 @@ package main
 
 import (
 	"j4f/core/module"
+	"j4f/core/modules/console"
 	mscheduler "j4f/core/modules/scheduler"
 	"j4f/core/server"
-	"j4f/modules/gate/console"
+	mhttp "j4f/modules/gate/http"
+	"j4f/modules/gate/socks5"
+	"j4f/modules/mlog"
 )
 
 func main() {
 	server.Info(`Just For Fun`)
 
-	// l := new(mlog.M_Log)
-	// s5 := new(socks5.M_Socks5)
-	// h := new(mhttp.M_Http)
+	l := new(mlog.M_Log)
+	s5 := new(socks5.M_Socks5)
+	h := new(mhttp.M_Http)
 	sin := new(console.M_Console)
 
-	run(sin)
+	run(sin, l, h, s5)
 
 	server.Info(`BYE`)
 }

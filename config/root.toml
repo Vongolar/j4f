@@ -11,13 +11,13 @@ config = "console.toml"
 name = "console"
 
 [[modules]]
+config = "log.toml"
+name = "log"
+
+[[modules]]
 config = "http.toml"
 name = "http"
 
 [[modules]]
 config = "socks5.toml"
 name = "socks5"
-
-[[modules]]
-config = "log.toml"
-name = "log"

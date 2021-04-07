@@ -12,6 +12,6 @@ enum command {
     handle = 4; //自动分配一个本地模块执行
 
     innerMax = 10000; //内部命令最大值
-    signup = 10001; //注册
-    login = 10002; //登录
+    closeModule = 10001; //关闭单个模块
+    restartModule = 10002; //重启模块
 }

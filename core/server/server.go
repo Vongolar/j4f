@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/sha1"
 	"flag"
 	jconfig "j4f/core/config"
 	"j4f/core/module"
@@ -13,10 +14,14 @@ import (
 
 var (
 	scheduleModuler scheduler.ISchedule
+
+	hasConsoleKey = false
+	consoleKey    [20]byte
 )
 
 func Run(scheduleMod scheduler.ISchedule, mods ...module.Module) {
 	rootCfgPath := flag.String(`c`, `./config/root.toml`, `配置`)
+	ck := flag.String(`k`, ``, `控制台key`)
 	flag.Parse()
 	err := jconfig.ParseFile(*rootCfgPath, &defaultConfig)
 	if err != nil {
@@ -27,6 +32,11 @@ func Run(scheduleMod scheduler.ISchedule, mods ...module.Module) {
 	if len(defaultConfig.ModuleConfigs) <= len(mods) {
 		Err("模块配置文件数不足")
 		return
+	}
+
+	if len(*ck) > 0 {
+		consoleKey = sha1.Sum([]byte(*ck))
+		hasConsoleKey = true
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -81,4 +91,18 @@ func registModules(mods ...module.Module) error {
 
 	closeLogBuffer()
 	return nil
+}
+
+func EqualConsoleKey(key string) bool {
+	if !hasConsoleKey {
+		return false
+	}
+	n := sha1.Sum([]byte(key))
+	for i := 0; i < len(n); i++ {
+		if n[i] != consoleKey[i] {
+			return false
+		}
+	}
+
+	return true
 }

@@ -8,15 +8,22 @@ import (
 	"j4f/core/server"
 	"j4f/core/task"
 	"j4f/data/command"
+	"j4f/data/common"
 	"j4f/data/errCode"
 )
 
 func (m *M_Scheduler) GetHandlers() map[command.Command]task.TaskHandler {
-	return map[command.Command]task.TaskHandler{
-		command.Command_registModule: m.registModule,
-		command.Command_runModules:   m.runModules,
-		command.Command_handle:       m.handle,
+	if m.handlers == nil {
+		m.handlers = map[command.Command]task.TaskHandler{
+			command.Command_registModule: m.registModule,
+			command.Command_runModules:   m.runModules,
+			command.Command_handle:       m.handle,
+
+			command.Command_closeModule:   m.closeModule,
+			command.Command_restartModule: m.restartModule,
+		}
 	}
+	return m.handlers
 }
 
 func (m *M_Scheduler) registModule(t *task.Task) {
@@ -56,7 +63,7 @@ func (m *M_Scheduler) registModule(t *task.Task) {
 	}
 
 	channel := make(chan *task.Task, cfg.Buffer)
-	newModule := &mod{name: mc.Name, m: mc.Mod, c: channel, cfg: cfg, handlers: mc.Mod.GetHandlers()}
+	newModule := &mod{name: mc.Name, cftPath: mc.Config, m: mc.Mod, c: channel, cfg: cfg, handlers: mc.Mod.GetHandlers()}
 
 	//注册方法
 	for cmd := range newModule.handlers {
@@ -80,10 +87,30 @@ func (m *M_Scheduler) runModules(t *task.Task) {
 	}
 }
 
+func (m *M_Scheduler) closeModule(t *task.Task) {
+	name := t.Data.(*common.ModuleName)
+	m.closeM(name.GetName())
+	t.Ok()
+}
+
+func (m *M_Scheduler) restartModule(t *task.Task) {
+	name := t.Data.(*common.ModuleName)
+	m.restartM(name.GetName())
+	t.Ok()
+}
+
 func (m *M_Scheduler) goRunModule(mod *mod) {
+	mod.Lock()
+	mod.enable = true
+	mod.Unlock()
+
 	m.wg.Add(1)
 	go func() {
 		defer func() {
+			mod.Lock()
+			mod.enable = false
+			mod.Unlock()
+
 			if err := recover(); err != nil {
 				server.ErrTag(mod.name, `模块异常退出`, err)
 				if mod.cfg.AutoRestart {
@@ -101,15 +128,49 @@ func (m *M_Scheduler) goRunModule(mod *mod) {
 
 func (m *M_Scheduler) handle(t *task.Task) {
 	ct := t.Data.(*task.Task)
-	mods, exist := m.handlerMap[ct.CMD]
-	if !exist || len(mods) == 0 {
+	mods := m.getEnableModulesByCMD(ct.CMD)
+	if len(mods) == 0 {
 		ct.Error(errCode.Code_noFindModuleForTask)
 		return
 	}
 
-	if len(mods) == 1 {
-		mods[0].c <- ct
+	mods[0].c <- ct
+}
+
+func (m *M_Scheduler) closeM(name string) {
+	cm := m.findModule(name)
+	if cm == nil {
 		return
 	}
 
+	cm.RLock()
+	if !cm.enable {
+		cm.RUnlock()
+		return
+	}
+	cm.RUnlock()
+	close(cm.c)
+
+	for cm.enable {
+	}
+}
+
+func (m *M_Scheduler) restartM(name string) {
+	m.closeM(name)
+	mod := m.findModule(name)
+
+	if mod == nil {
+		return
+	}
+
+	mod.c = make(chan *task.Task, mod.cfg.Buffer)
+
+	//性能缓存
+	if m.cfg.Profile > 0 {
+		mod.profileQueue = createFixIntergerQueue(m.cfg.Profile)
+		mod.errProfileQueue = createFixBooleanQueue(m.cfg.Profile)
+	}
+
+	mod.m.Init(m.ctx, mod.name, mod.cftPath)
+	m.goRunModule(mod)
 }

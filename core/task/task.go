@@ -4,10 +4,12 @@ import (
 	"j4f/core/request"
 	"j4f/data/command"
 	"j4f/data/errCode"
+	"j4f/define"
 )
 
 type Task struct {
 	CMD     command.Command
+	Author  define.Auth
 	Data    interface{}
 	Request request.Request
 }

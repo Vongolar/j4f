@@ -5,7 +5,12 @@ import "command.proto";
 package common;
 option go_package = "j4f/data/common;common";
 
-message pack {
+message consolePack {
     command.command command = 1;
-    bytes data = 2;
+    string key = 2;
+    string data = 3;
+}
+
+message moduleName {
+    string name = 1;
 }
