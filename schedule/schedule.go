@@ -3,10 +3,10 @@ package schedule
 import (
 	"context"
 	"sync"
-	"time"
 )
 
 type MSchedule struct {
+	handlers map[int][]*moduleHandlerTuple
 }
 
 func (m *MSchedule) Run(ctx context.Context, wg *sync.WaitGroup) error {
@@ -20,7 +20,6 @@ func (m *MSchedule) run(ctx context.Context, wg *sync.WaitGroup) {
 
 	select {
 	case <-ctx.Done():
-		time.Sleep(10 * time.Second)
-
+		return
 	}
 }
