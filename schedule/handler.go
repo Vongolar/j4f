@@ -5,6 +5,10 @@ import (
 	"j4f/task"
 )
 
+func (m *MSchedule) GetCommandIDs() []int {
+
+}
+
 func (m *MSchedule) GetHandlers() map[int]func(*task.Task) {
 	return map[int]func(*task.Task){}
 }
@@ -15,8 +19,8 @@ func (m *MSchedule) registModule(task task.Task) {
 		return
 	}
 
-	hs := data.GetHandlers()
-	for commandID, handler := range hs {
-		if 
-	}
+	// hs := data.GetHandlers()
+	// for commandID, handler := range hs {
+	// 	if
+	// }
 }
