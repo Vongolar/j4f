@@ -1,4 +1,4 @@
-package schedule
+package test
 
 import (
 	"j4f/command"
@@ -7,6 +7,6 @@ import (
 
 func (m *Module) GetHandlers() map[int]module.TaskHandle {
 	return map[int]module.TaskHandle{
-		command.CMD_REGIST_MODULE: m.registModuleHandler,
+		command.CMD_TEST: m.testHandle,
 	}
 }
